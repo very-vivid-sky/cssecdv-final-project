@@ -140,11 +140,8 @@ const userController = {
                 message: "User Registered!"
             });
         } catch (error) {
-<<<<<<< HEAD
-=======
             console.log(error);
             resp.send({ message: error.message });
->>>>>>> d9cb081b117785dc75cdfb62039f1b6b667d5db5
         }
         */
     },
@@ -161,6 +158,7 @@ const userController = {
         }
     },
 
+    // known to be deprecated --cy 2025
     login_post: async (req, resp) => {
         let searchQuery = { userEmail: req.body.email, password: req.body.password };
         helper.getUserFromData("userEmail", searchQuery.userEmail, function (user) {
@@ -168,7 +166,7 @@ const userController = {
 
                 // email matches password
                 helper.currUser = user._id;
-                changeClient(helper.currUser);
+                this.changeClient(helper.currUser);
                 resp.redirect("/");
             } else {
                 // email or password are incorrect
@@ -218,9 +216,8 @@ const userController = {
     },
 
     editUser_get: async (req, resp) => {
-        const searchQuery = { _id: "65ef7d6f0d0c59dfb507fb48" };
-        helper.getUserFromData("_id", helper.currUser, function (user) {
-            if (user != undefined) {
+        helper.getUserFromData("_id", req.session.userId, function (user) {
+            if (user != undefined || user != null) {
                 let clientParentArr = [];
                 clientParentArr = user;
 
@@ -236,10 +233,12 @@ const userController = {
                     userId: clientParentArr,
                     clientType: true
                 });
+            } else {
+                resp.status(500).send({ message: "An error occured while loading your profile." });
             }
         }).catch((error) => {
             console.log(error);
-            resp.status(500).send({ message: error.message });
+            resp.status(500).send({ message: "An error occured while loading your profile." });
         });
     },
 
@@ -312,7 +311,7 @@ const userController = {
 
     },
 
-
+    // probably deprecated --cy 2025
     logout_post: async (req, resp) => {
         changeClient();
         resp.redirect("/");

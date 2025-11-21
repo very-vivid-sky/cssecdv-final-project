@@ -92,7 +92,9 @@ const reviewController = {
             { "text": "Edit reply", id: "owneredit" },
         ]
 
-        ownerId = ownerId.toString();
+        if (ownerId != undefined) {
+            ownerId = ownerId.toString();
+        }
         if (currId != undefined) {
             currId = currId.toString();
         }
@@ -152,7 +154,6 @@ const reviewController = {
         reviews.sort((a, b) => helper.compareDates(b.createdAt, a.createdAt) );
         // then helpful ratio
         reviews.sort((a, b) => (b.helpful - b.nothelpful) - (a.helpful - a.nothelpful));
-
 
         // sort for other cases
         switch(sortedBy) {
