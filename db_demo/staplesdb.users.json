@@ -1,0 +1,126 @@
+[{
+  "_id": {
+    "$oid": "660fe73eae26ca8d8c21a1f3"
+  },
+  "userName": "deanluca",
+  "userEmail": "deanluca@gmail.com",
+  "password": "$2b$05$sot7GilfWtv9evzPxi4DM.dgVHBftOGY7vd3bV8ns.etvBFohLWeO",
+  "userDetails": "",
+  "totalReviews": 0,
+  "clientType": "user",
+  "createdAt": {
+    "$date": "2024-04-05T11:57:50.754Z"
+  },
+  "updatedAt": {
+    "$date": "2024-04-05T11:57:50.754Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "660fe787ae26ca8d8c21a1f7"
+  },
+  "userName": "patriciacons",
+  "userEmail": "patricia73@gmail.com",
+  "password": "$2b$05$xPV15oX90N4j6gM4IPvMEed5CtUNOCzsQWdEyJs3MCtAD2Lhqq2Ga",
+  "userDetails": "",
+  "totalReviews": 0,
+  "clientType": "user",
+  "createdAt": {
+    "$date": "2024-04-05T11:59:03.033Z"
+  },
+  "updatedAt": {
+    "$date": "2024-04-05T11:59:03.033Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "660fe7deae26ca8d8c21a1fa"
+  },
+  "userName": "redvelvetsky",
+  "userEmail": "thisIsanEmail@gmail.com",
+  "password": "$2b$05$NXVsKw7AVztvKH/VjOWPTeVPFPxtnf7im5MuagtCI2epEGAl86hJu",
+  "userDetails": "pics or you never ate it",
+  "totalReviews": 0,
+  "clientType": "user",
+  "createdAt": {
+    "$date": "2024-04-05T12:00:30.555Z"
+  },
+  "updatedAt": {
+    "$date": "2024-04-05T12:00:30.555Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "660fe80aae26ca8d8c21a1fe"
+  },
+  "userName": "urbanpalate",
+  "userEmail": "orionStart@gmail.com",
+  "password": "$2b$05$ZhiwwnTKXutFH03CzNhje.HQNO0xAEUIQdNO7jVAErDv50Eu3sxoq",
+  "userDetails": "",
+  "totalReviews": 0,
+  "clientType": "user",
+  "createdAt": {
+    "$date": "2024-04-05T12:01:14.230Z"
+  },
+  "updatedAt": {
+    "$date": "2024-04-05T12:01:14.230Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "660fe853ae26ca8d8c21a202"
+  },
+  "userName": "jackporter",
+  "userEmail": "porterJack29@gmail.com",
+  "password": "$2b$05$0SpvyqfdcNttCoegpLkUVeF076IzcxBbDhCg97IUI6GRfliZR.Zry",
+  "userDetails": "",
+  "totalReviews": 0,
+  "clientType": "user",
+  "createdAt": {
+    "$date": "2024-04-05T12:02:27.342Z"
+  },
+  "updatedAt": {
+    "$date": "2024-04-05T12:02:27.342Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "660fe87fae26ca8d8c21a205"
+  },
+  "userName": "muaddib",
+  "userEmail": "holyWar34@gmail.com",
+  "password": "$2b$05$mXt8u9W6/F/mtVXAF/o0oelxp1yyMRsov2vW6AaDjPOjHi/xieWTW",
+  "userDetails": "",
+  "totalReviews": 0,
+  "clientType": "user",
+  "createdAt": {
+    "$date": "2024-04-05T12:03:11.404Z"
+  },
+  "updatedAt": {
+    "$date": "2024-04-05T12:03:11.404Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "660fe8a0ae26ca8d8c21a209"
+  },
+  "userName": "very-vivid-sky",
+  "userEmail": "cy@test.com",
+  "password": "$2b$05$cZbh.kPBW4v8F7NPOsqBCu230LXwz8khBwXL0DAUSCgIPZla.TaNu",
+  "userDetails": "",
+  "totalReviews": 0,
+  "clientType": "user",
+  "createdAt": {
+    "$date": "2024-04-05T12:03:44.912Z"
+  },
+  "updatedAt": {
+    "$date": "2024-04-05T12:03:44.912Z"
+  },
+  "__v": 0
+}]

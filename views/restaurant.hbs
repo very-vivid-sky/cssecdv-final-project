@@ -1,0 +1,126 @@
+{{#if clientType}}
+{{>clientheader}}
+{{else}}
+{{>guestheader}}
+{{/if}}
+
+<script src="/pages/restaurant.js"></script>
+
+<div class="container d-flex flex-column min-vh-100">
+	<section class="container-fluid m-0 d-flex flex-column gap-2">
+		<div class="row pt-0">
+			{{#each images}}
+			<img src='{{this}}' class="img-fluid object-fit-cover col-4 nopadding" style="height: 250px">
+			{{/each}}
+		</div>
+
+		<div class="row gap-0 px-0 mx-4">
+			<div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
+				<h1 class="my-0">{{name}}</h1>
+				<div class="d-flex gap-1 align-items-center">
+					{{#renderStars rating}}{{/renderStars}}
+					<div class="rating-text mx-2">{{rating}}</div>
+				</div>
+			</div>
+			<div class="col-xs-12 col-sm-12 col-md-8 col-lg-8 d-flex align-items-center gap-2">
+				{{#if clientType}}
+				<button class="btn btn-create-review btn-text btn-md" data-bs-toggle="modal"
+					data-bs-target="#review-modal">Create a review</button>
+				{{/if}}
+				<div class="btn-group">
+					<select class="btn btn-success dropdown-toggle" id="dropdown-sortby">
+						<option selected value="helpful-first">Most Helpful</option>
+						<option value="newest-first">Newest to Oldest</option>
+						<option value="oldest-first">Oldest to Newest</option>
+						<option value="positive-first">Highest Rated to Lowest Rated</option>
+						<option value="negative-first">Lowest Rated to Highest Rated</option>
+					</select>
+					<!--
+					<div class="dropdown">
+						<button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenuButton"
+							data-bs-toggle="dropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							Filter By
+						</button>
+
+						
+						<div class="dropdown-menu" aria-labelledby="dropdownMenuButton" id="dropdown-sortby">
+							<a class="dropdown-item" href="#">Newest to Oldest</a>
+							<a class="dropdown-item" href="#">Oldest to Newest</a>
+							<a class="dropdown-item" href="#">Higher Ratings to Lower Ratings</a>
+							<a class="dropdown-item" href="#">Lower Ratings to Higher Ratings</a>
+						</div>
+					</div>
+					-->
+				</div>
+
+				<div class="modal fade" id="review-modal">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">Review
+								<button class="btn-close" data-bs-dismiss="modal" data-bs-target="modal"></button>
+							</div>
+
+							<form class="form-group" id="reviewForm" action='/restaurant/{{restaurantAcc}}' method="POST">
+								<div class="modal-body d-flex flex-column gap-2">
+									<!--
+									<div class="d-flex gap-1 align-items-center">
+										{{{ratingStars}}}
+									</div>
+									<label for="message-text" class="col-form-label">Title:</label>
+									<input type="text" class="form-control" id="reviewTitle"></input>
+									<label for="message-text" class="col-form-label">Body:</label>
+									<textarea class="form-control" id="reviewBody"></textarea>
+									<input type="hidden" id="restaurantAcc" value="{{restaurantId}}"></input>
+									<input type="hidden" id="userAcc" value="{{userAcc}}"></input>
+									-->
+									<div class="d-flex gap-3">
+										<label class="form-label m-0" for="modal-rating">Rating</label>
+										<input type="range" class="form-range" id="modal-rating" name="rating" min=1 max=5 step=1/>
+									</div>
+									<div>
+										<label class="form-label m-0" for="reviewBody">Review:</label>
+										<textarea class="form-control" name="review" id="reviewBody"></textarea>
+									</div>
+									<div>
+										<label class="form-label mb-0 mt-1" for="create-review-img">Upload
+											pictures</label>
+										<input type="file" class="form-control" id="create-review-img" />
+									</div>
+								<div class="modal-footer">
+								<input type="submit" class="btn" id="reviewSubmit" value="Submit" />
+								<input type="button" class="btn" data-bs-dismiss="modal" value="Cancel"/>
+							</form>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+</div>
+
+<div class="row gap-0 px-0 mx-4">
+
+	<!-- restaurant details -->
+	<div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
+		<div class="container details">
+			Address: {{address}}
+			<br>
+			{{#if number}}
+			Number: {{number}}
+			<br>
+			{{/if}}
+			Operating Hours: {{openingTime}} - {{closingTime}}
+		</div>
+	</div>
+
+	<!-- review pane-->
+	<div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">
+		<div class="col-sm" id="all-reviews">
+			{{>resto-review}}
+		</div>
+	</div>
+</div>
+
+</section>
+</div>

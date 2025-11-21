@@ -1,0 +1,69 @@
+const mongoose = require('mongoose');
+const helper = require('./controllers/controllerHelper.js');
+const express = require('express');
+const session = require('express-session');
+const handlebars = require('express-handlebars');
+const bodyParser = require('body-parser')
+const mongoStore = require('connect-mongodb-session')(session);
+require("dotenv").config();
+
+const mongoURI = process.env.MONGODB;
+
+mongoose
+    .connect(mongoURI)
+    .then(() => {
+        console.log('App connected to Staples Database');
+        const PORT = 3000;
+        //only listen to a port if the mongoose connection is a success    
+        app.listen(PORT, () => {
+            console.log(`Listening to port ${PORT}`);
+        })
+    })
+    .catch((error) => {
+        console.log(error)
+    });
+
+const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.set('view engine', 'hbs');
+app.engine(
+    "hbs",
+    handlebars.engine({
+        extname: "hbs",
+        defaultLayout: false,
+        layoutsDir: "views/layouts/",
+        helpers: {
+            renderStars: function(rating) { return helper.generateStarHTML(rating); },
+        }
+    })
+);
+
+const routes = require('./routes/routes.js');
+
+app.use(express.static('public'));
+app.use(session({
+    secret: 'a secret fruit',
+    saveUninitialized: true, 
+    resave: false,
+    store: new mongoStore({ 
+      uri: mongoURI,
+      collection: 'mySession',
+      expires: 1000*60*60 // 1 hour
+    })
+}));
+app.use(`/`, routes);
+
+module.exports = app;
+
+function finalClose() {
+    console.log('Close connection at the end!');
+    mongoose.connection.close();
+    process.exit();
+}
+
+process.on('SIGTERM', finalClose); //general termination signal
+process.on('SIGINT', finalClose);  //catches when ctrl + c is used
+process.on('SIGQUIT', finalClose); //catches other termination commands

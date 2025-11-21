@@ -1,0 +1,60 @@
+<div class="comment p-0 d-flex flex-column gap-2"></div>
+<!-- empty comment purely for the border, to solve fencepost problem -->
+
+{{#each reviews}}
+<div class="comment d-flex flex-column gap-2">
+	<div class="container d-flex flex-row gap-1">
+		<a href="/user/{{userId}}">
+			<img class="comment-pfp" src="{{img}}" />
+		</a>
+		<div class="container d-flex flex-column">
+			<div class="d-flex align-items-center flex-row gap-2">
+				<span class="username">{{username}}</span>
+				{{#if actionBtn}}
+					<button class="btn btn-login btn-text btn-sm" id="{{actionBtn.id}}-{{id}}" data-bs-toggle="modal" data-bs-target="#modal">{{actionBtn.text}}</button>
+				{{/if}}
+			</div>
+			<div class="d-flex gap-1 align-items-center">
+				{{#renderStars rating}}{{/renderStars}}
+				<div class="rating-text mx-2">{{rating}}</div>
+			</div>
+			<span class="date">{{date}}</span>
+		</div>
+	</div>
+	<div class="mx-1">
+		{{comment}}
+	</div>
+
+	{{#if images}}
+	<div class="rev-photo-container mt-1 mb-1">
+		{{#each images}}
+		<img class="rev-photo" src="{{path}}" />
+		{{/each}}
+	</div>
+	{{/if}}
+			
+	{{#if establishmentResponse}}
+	<div class="mx-4">
+		<b>Establishment response:</b> {{establishmentResponse}}
+	</div>
+	{{/if}}
+
+	<div class="container d-flex flex-row text-center gap-2">
+		<div>
+			<button class="bi bi-hand-thumbs-up btn btn-outline-dark " onclick='markHelpful()'
+				id="checkHelpful">
+				<div class="button-helpful-text">Helpful ({{helpful}})</div>
+			</button>
+		</div>
+
+		<div>
+			<div>
+				<button class="bi bi-hand-thumbs-down btn btn-outline-dark"
+					onclick='markUnHelpful()' id="checkNotHelpful">
+					<div class="button-helpful-text">Not helpful ({{nothelpful}})</div>
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+{{/each}}

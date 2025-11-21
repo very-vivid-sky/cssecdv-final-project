@@ -1,0 +1,37 @@
+{{>guestheader}}
+<body>
+  <section class="container column my-3 d-flex flex-column min-vh-100">
+    <div>
+      <h1>Log In</h1>
+    </div>
+     {{#if message}}
+      <div class="alert alert-danger" role="alert"><strong>{{message}}</strong>
+      </div>
+      {{/if}}
+
+    <div class="my-2 mx-3">
+      <form id="login" name="login" class="form vstack login-form gap-1" action="/login" method="POST">
+
+        <input type="text" name="email" id="email" placeholder="Email" class="form-control" required>
+        <input type="password" name="password" id="password" placeholder="Password" class="form-control" required>
+        
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+          <label class="form-check-label" for="flexCheckDefault">
+            Remember Me
+          </label>
+
+        </div>
+        <a href='login.html'>
+          <button id="" type="submit" class="btn btn-success">Login</button>
+        </a>
+      </form>
+    </div>
+
+    <div>
+      Don't have an account? <a href="/register" class="account">Sign up</a> for one now!
+    </div>
+
+  </section>
+
+</body>

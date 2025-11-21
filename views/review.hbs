@@ -1,0 +1,38 @@
+{{>guestheader}}
+
+<body class="d-flex flex-column min-vh-100">
+  <section class="container column my-3">
+    <div>
+      <h1>Sign Up</h1>
+    </div>
+    <div class="my-2 mx-3">
+      {{#if message}}
+      <div class="alert alert-success" role="alert"><strong>{{message}}</strong>
+      </div>
+      <br>
+      {{/if}}
+
+      <form name="review-form" action="/review" method="POST" enctype="multipart/form-data" class="form vstack login-form gap-1" >
+
+       <label for="message-text" class="col-form-label">Title:</label>
+										<input type="text" class="form-control" id="reviewTitle"></input>
+										<label for="message-text" class="col-form-label">Body:</label>
+										<textarea class="form-control" id="reviewBody"></textarea>
+										<div>
+											<label class="form-label mb-0 mt-1" for="create-review-img">Upload
+												pictures</label>
+											<input type="file" class="form-control" id="create-review-img" />
+										</div>
+										<input type="hidden" id="restaurantAcc" value="{{restaurantId}}"></input>
+										<input type="hidden" id="userAcc" value="{{userAcc}}"></input>
+
+          <input id="review-btn" type="submit" class="btn btn-success"/>
+        
+      </form>
+    </div>
+
+    <div>
+      Already have an account? <a href="/login" class="account">Log in here</a>!
+    </div>
+  </section>
+</body>

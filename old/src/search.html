@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Staples</title>
+	<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="./style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Corben&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+	<script>
+
+$("document").ready(function() {
+	// for demo only
+	$("#search-submit").click(function() {
+		
+		$("#search-results").html(`
+		<h1>Search results</h1>
+			<div class="container row px-0 d-flex justify-content-center gap-3">
+
+				<a href="view-restaurant-1.html" class="btn service-card p-0" >
+				<img src="../public/healthy-sand/img2.jpg" class="object-fit-cover">
+				<div class="display-flex flex-column align-items-center p-2">
+					<h2>Healthy Sands</h2>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill"></i>
+						<i class="bi bi-star-fill"></i>
+					<div class="rating-text mx-2">3.0</div>
+					<div class="sample-review">
+						Honestly, this sandwich has more lettuce than tofu
+					</div>
+					<div class="user">— Patricia C.  <b>(4/5)</b></div>
+				</div>
+			</a>
+			
+			<a href="view-restaurant-2.html" class="btn service-card p-0" >
+				<img src="../public/projuice-bar/img2.jpg" class="object-fit-cover">
+				<div class="display-flex flex-column align-items-center p-2">
+					<h2>Projuice Bar</h2>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+					<div class="rating-text mx-2">5.0</div>
+					<div class="sample-review">
+						This little gem is a few walks away from Benilde and St. Scholastica. Went here for early lunch, so it didn't really get crowded. At first we thought it was a little bit pricey, but the dishes and the drinks were actually filling. I over-ordered even, by getting shrimp adlai omurice and Asian chicken salad. By the time I got to the omurice, I was already almost full
+					</div>
+					<div class="user">— Dean L.  <b>(5/5)</b></div>
+				</div>
+			</a>
+
+
+			<a href="view-restaurant-3.html" class="btn service-card p-0" >
+				<img src="../public/hippie-happy/omg4.jpg" class="object-fit-cover">
+				<div class="display-flex flex-column align-items-center p-2">
+					<h2>Hippi Happy Bowls</h2>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+						<i class="bi bi-star-fill star-rated-filled"></i>
+					<div class="rating-text mx-2">5.0</div>
+					<div class="sample-review">
+						I love how fresh the ingredients they used in the tuna and bacon king sandwiches. Also, the owners and employees are friendly and accomodating. The venue of the place is also cozy and also easy to locate. This is a must try
+					</div>
+					<div class="user">— Eungbak L.  <b>(5/5)</b></div>
+				</div>
+			</a>
+		`)
+
+	})
+})
+
+	</script>
+</head>
+<body>
+	<nav class="navbar navbar-expand navbar-parent"> 
+		<div class="container gx-3">
+				<ul class="navbar-nav">
+					<li class="nav-item">
+			  <a href="index.html" class="nav-link" aria-current="page">Home</a>
+			</li>
+					<li class="nav-item">
+			  <a href="view-all-restaurants.html" class="nav-link">Restaurants</a>
+			</li>
+					<li class="nav-item">
+			  <a href="about_us.html" class="nav-link">About Us</a>
+			</li>
+				</ul>
+	
+		  <a href="index.html" class="navbar-brand">staples</a>
+			
+				<ul  class="navbar-nav gap-3">
+					<li class="nav-item">
+			  <a href="search.html" class="bi bi-search fs-4 mb-3 bt-lg btn-search"></a>
+			</li>
+					<li class="nav-item">
+			  <a href="login.html" class="btn btn-login btn-text">Log In</a>
+			</li>
+	
+					<li class="nav-item">
+					  <a href="register.html" class="btn btn-register btn-text">Register</a>
+			</li>
+	
+				</ul>
+		</div>
+	</nav>
+
+	<div class="d-flex flex-column gap-5 my-2">
+		<section class="container">
+			<div class="d-flex flex-column gap-2">
+				<h1>Search for restaurants</h1>
+				<div class="d-flex flex-row gap-3 justify-content-center">
+					<input type="text" class="form-control w-75" id="search-value">
+					<input type="submit" class="btn btn-login btn-text" value="Search" id="search-submit">
+				</div>
+			</div>
+		</section>
+
+		<section class="container" id="search-results">
+		<!--
+			<h1>Search results</h1>
+			<div class="container row px-0 d-flex justify-content-center gap-3">
+
+				<a href="view-restaurant-1.html" class="btn service-card p-0" >
+					<img src="../public/healthy-sand/img2.jpg" class="object-fit-cover">
+					<div class="display-flex flex-column align-items-center p-2">
+						<h2>Healthy Sands</h2>
+						<span class="rating-small rating-filled"></span> <span class="rating-small rating-filled"></span> <span class="rating-small rating-filled"></span> <span class="rating-small rating-filled"></span> <span class="rating-small rating-empty"></span>
+						<div class="rating-text mx-2">5.0</div>
+						<div class="sample-review">
+							I love how fresh the ingredients they used in the tuna and bacon king sandwiches. Also, the owners and employees are friendly and accomodating. The venue of the place is also cozy and also easy to locate. This is a must try
+						</div>
+						<div class="user">— Nesha N.  <b>(5/5)</b></div>
+					</div>
+				</a>
+				
+				<a href="view-restaurant-1.html" class="btn service-card p-0" >
+					<img src="../public/healthy-sand/img2.jpg" class="object-fit-cover">
+					<div class="display-flex flex-column align-items-center p-2">
+						<h2>Healthy Sands</h2>
+						<span class="rating-small rating-filled"></span> <span class="rating-small rating-filled"></span> <span class="rating-small rating-filled"></span> <span class="rating-small rating-filled"></span> <span class="rating-small rating-empty"></span>
+						<div class="rating-text mx-2">5.0</div>
+						<div class="sample-review">
+							I love how fresh the ingredients they used in the tuna and bacon king sandwiches. Also, the owners and employees are friendly and accomodating. The venue of the place is also cozy and also easy to locate. This is a must try
+						</div>
+						<div class="user">— Nesha N.  <b>(5/5)</b></div>
+					</div>
+				</a>
+	
+				<a href="view-restaurant-1.html" class="btn service-card p-0" >
+					<img src="../public/healthy-sand/img2.jpg" class="object-fit-cover">
+					<div class="display-flex flex-column align-items-center p-2">
+						<h2>Healthy Sands</h2>
+						<span class="rating-small rating-filled"></span> <span class="rating-small rating-filled"></span> <span class="rating-small rating-filled"></span> <span class="rating-small rating-filled"></span> <span class="rating-small rating-empty"></span>
+						<div class="rating-text mx-2">5.0</div>
+						<div class="sample-review">
+							I love how fresh the ingredients they used in the tuna and bacon king sandwiches. Also, the owners and employees are friendly and accomodating. The venue of the place is also cozy and also easy to locate. This is a must try
+						</div>
+						<div class="user">— Nesha N.  <b>(5/5)</b></div>
+					</div>
+				</a>
+			</div>
+		-->
+		<!-- Above to be pasted manually via -->
+		</section>
+	</div>
+
+<!--FOOTER START-->
+<div class="force-bottom mt-auto">
+  <footer class="py-4 mt-4">
+    <ul class="nav justify-content-center border-bottom pb-1 mb-1">
+      <li class="nav-item">
+        <a href="index.html" class="nav-link px-2 text-muted">Home</a>
+      </li>
+      <li class="nav-item">
+        <a href="view-all-restaurants.html" class="nav-link px-2 text-muted">Restaurants</a>
+      </li>
+      <li class="nav-item">
+        <a href="about_us.html" class="nav-link px-2 text-muted">About Us</a>
+      </li>
+    </ul>
+    <p class="text-center text-muted">© 2024 Amaya DEVS Company, Inc</p>
+  </footer>
+</div>
+<!--FOOTER END-->
+
+</body>
+</html>

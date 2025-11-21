@@ -1,0 +1,25 @@
+{{#if clientType}}
+  {{>clientheader}}
+{{else}}
+  {{>guestheader}}
+{{/if}}
+
+<body>
+	<div class="d-flex flex-column gap-5 my-2">
+		<section class="container">
+			<div class="d-flex flex-column gap-2">
+				<h1>Search for restaurants</h1>
+				<form class="d-flex flex-row gap-3 justify-content-center" id="search">
+					<input type="text" class="form-control w-75" id="search-value">
+					<input type="submit" class="btn btn-login btn-text" value="Search" id="search-submit">
+				</form>
+			</div>
+		</section>
+
+		<section class="container" id="search-results">
+
+		</section>
+	</div>
+</body>
+
+<script src="/pages/search.js"></script>

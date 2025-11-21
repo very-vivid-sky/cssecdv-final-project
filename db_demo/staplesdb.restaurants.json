@@ -1,0 +1,158 @@
+[{
+  "_id": {
+    "$oid": "65ed2d6ae2ad6c682dff1d1c"
+  },
+  "name": "Projuice Bar",
+  "address": "2274 Taft Ave, Malate, Manila, 1004 Metro Manila",
+  "contactNumber": "0917 627 0150",
+  "openingTime": {
+    "h": 7,
+    "m": 30
+  },
+  "closingTime": {
+    "h": 21,
+    "m": 0
+  },
+  "bannerPhoto": "/images/projuice-bar/img1.jpg",
+  "rating": 4.4,
+  "images": [
+    "/images/projuice-bar/img1.jpg",
+    "/images/projuice-bar/img2.jpg",
+    "/images/projuice-bar/img3.jpg"
+  ],
+  "allReviews": [],
+  "createdAt": {
+    "$date": "2024-03-08T15:47:54.918Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-07T03:47:54.918Z"
+  },
+  "estOwner": {
+    "$oid": "660fe8a0ae26ca8d8c21a209"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65ed2d89e2ad6c682dff1d1e"
+  },
+  "name": "Healthy Sands",
+  "address": "2/F R Square Mall P.ocampo st, Corner Taft Ave, Malate, Manila, 1004 Metro Manila",
+  "contactNumber": "09369220246",
+  "openingTime": {
+    "h": 10,
+    "m": 30
+  },
+  "closingTime": {
+    "h": 20,
+    "m": 30
+  },
+  "rating": 0,
+  "bannerPhoto": "/images/healthy-sand/img1.jpg",
+  "images": [
+    "/images/healthy-sand/img1.jpg",
+    "/images/healthy-sand/img2.jpg",
+    "/images/healthy-sand/img3.jpg"
+  ],
+  "allReviews": [],
+  "createdAt": {
+    "$date": "2024-03-10T03:48:25.527Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-10T03:48:25.527Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65ed2da8e2ad6c682dff1d20"
+  },
+  "name": "Planted PH",
+  "address": "1162 Jorge Bocobo St, Ermita, Manila, 1000 Metro Manila",
+  "contactNumber": "0977 110 5222",
+  "openingTime": {
+    "h": 7,
+    "m": 0
+  },
+  "closingTime": {
+    "h": 18,
+    "m": 0
+  },
+  "rating": 0,
+  "bannerPhoto": "/images/planted-ph/img1.jpg",
+  "images": [
+    "/images/planted-ph/img1.jpg",
+    "/images/planted-ph/img2.jpg",
+    "/images/planted-ph/img3.jpg"
+  ],
+  "allReviews": [],
+  "createdAt": {
+    "$date": "2024-03-10T03:48:56.183Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-10T03:48:56.183Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65ed2dc0e2ad6c682dff1d22"
+  },
+  "name": "Happy N' Healthy",
+  "address": "2305 Fidel A.Reyes, Malate, Manila, 1004 Metro Manila",
+  "contactNumber": "0935 846 1723",
+  "openingTime": {
+    "h": 8,
+    "m": 0
+  },
+  "closingTime": {
+    "h": 19,
+    "m": 30
+  },
+  "rating": 0,
+  "bannerPhoto": "/images/happy-healthy/img3.png",
+  "images": [
+    "/images/happy-healthy/img1.jpg",
+    "/images/happy-healthy/img2.jpg",
+    "/images/happy-healthy/img3.jpg"
+  ],
+  "allReviews": [],
+  "createdAt": {
+    "$date": "2024-03-10T03:49:20.814Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-10T03:49:20.814Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65ed2dd8e2ad6c682dff1d24"
+  },
+  "name": "Hippi Happy Bowls",
+  "address": "3231 Zapote St, cor Malolos, Makati, 1207 Metro Manila",
+  "contactNumber": "0998 462 1757",
+  "openingTime": {
+    "h": 8,
+    "m": 0
+  },
+  "closingTime": {
+    "h": 18,
+    "m": 0
+  },
+  "rating": 0,
+  "bannerPhoto": "/images/hippie-happy/img1.jpg",
+  "images": [
+    "/images/hippie-happy/img1.jpg",
+    "/images/hippie-happy/img2.jpg",
+    "/images/hippie-happy/img3.jpg"
+  ],
+  "allReviews": [],
+  "createdAt": {
+    "$date": "2024-03-10T03:49:44.087Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-10T03:49:44.087Z"
+  },
+  "__v": 0
+}]

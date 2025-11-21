@@ -1,0 +1,91 @@
+{{#if clientType}}
+{{>clientheader}}
+{{else}}
+{{>guestheader}}
+{{/if}}
+
+
+<!--BODY-->
+
+<div class="d-flex flex-column min-vh-100 body-userdetails">
+  <div class="container mt-5">
+    <div class="row">
+
+      <div class="col-4">
+        <div class="user-box">
+          <div class="card ">
+            <img class="card-img-top img-fluid object-fit-cover user-display-photo " src="{{image}}" />
+            <div class="card-body">
+              <h4 class="card-title username">{{userName}}</h4>
+              <h6 class="card-subtitle user-other-info">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                  class="bi bi-calendar-date" viewBox="0 0 16 16">
+                  <path
+                    d="M6.445 11.688V6.354h-.633A13 13 0 0 0 4.5 7.16v.695c.375-.257.969-.62 1.258-.777h.012v4.61zm1.188-1.305c.047.64.594 1.406 1.703 1.406 1.258 0 2-1.066 2-2.871 0-1.934-.781-2.668-1.953-2.668-.926 0-1.797.672-1.797 1.809 0 1.16.824 1.77 1.676 1.77.746 0 1.23-.376 1.383-.79h.027c-.004 1.316-.461 2.164-1.305 2.164-.664 0-1.008-.45-1.05-.82zm2.953-2.317c0 .696-.559 1.18-1.184 1.18-.601 0-1.144-.383-1.144-1.2 0-.823.582-1.21 1.168-1.21.633 0 1.16.398 1.16 1.23">
+                  </path>
+                  <path
+                    d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z">
+                  </path>
+                </svg>
+                Joined: <span class="user-join-date">{{joined}}</span>
+              </h6>
+              <h6 class="card-subtitle user-other-info mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                  class="bi bi-pencil-fill" viewBox="0 0 16 16">
+                  <path
+                    d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z">
+                  </path>
+                </svg>
+                Total Reviews: <span class="user-total-reviews">{{totalReviews}}</span>
+              </h6>
+              <div class="card-text user-bio">
+                {{#if bio}}
+                {{bio}}
+                {{/if}}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 review-pane">
+        <div class="card">
+          <section class="container column my-3">
+            <div>
+              <h1>Edit Account</h1>
+            </div>
+
+            <div class="my-2 mx-3">
+              <form name="register-form" onsubmit="return checkForm()" method="get" class="form vstack login-form gap-1"
+                action="/newaccount" method=post
+                oninput='up2.setCustomValidity(up2.value != up.value ? "Passwords do not match." : "")'>
+                <input type="text" id="username" placeholder="Change Username" class="form-control" required>
+                <input type="password" id="password" placeholder="Old Password" class="form-control" required>
+                <input type="password" id="password" placeholder="New Password" class="form-control" required name=up>
+                <input type="password" id="retype-password" placeholder="Retype New Password" class="form-control"
+                  required name=up2>
+
+                <div>
+                  <label class="form-label mb-0 mt-1 mx-3" for="customFile">Change Avatar Picture:</label>
+                  <input type="file" class="form-control" id="customFile" />
+                </div>
+                <div>
+                  <label class="form-label mb-0 mt-1 mx-3" for="customFile">Change Description:</label>
+                  <input type="text" class="form-control" id="bio" placeholder="Enter Short Description">
+                </div>
+                <a href='index-logged-in.html'>
+                  <button id="" type="submit" class="btn btn-success">Update</button>
+                </a>
+              </form>
+            </div>
+          </section>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  </div>
+  </div>
+</div>
+

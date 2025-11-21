@@ -1,0 +1,39 @@
+{{>guestheader}}
+
+<body class="d-flex flex-column min-vh-100">
+  <section class="container column my-3">
+    <div>
+      <h1>Sign Up</h1>
+    </div>
+    <div class="my-2 mx-3">
+      {{#if message}}
+      <div class="alert alert-danger" role="alert"><strong>{{message}}</strong>
+      </div>
+      {{/if}}
+
+      <form name="register-form" id="register-form" class="form vstack login-form gap-1" action="/register" method="POST">
+      <!-- oninput='password2.setCustomValidity(password2.value != password1.value ? "Passwords do not match." : "")' -->
+
+        <input type="text" name="email" id="email" placeholder="Email" class="form-control" required>
+        <input type="text" name="username" id="username" placeholder="Username" class="form-control" required>
+        <input type="password" name="password" id="password" placeholder="Password" class="form-control" required
+          name=password1>
+        <input type="password" id="retype-password" placeholder="Retype password" class="form-control" required
+          name=password2>
+        <input type="text" name="bio" class="form-control" id="bio" placeholder="Enter Short Description (optional)">
+        <div>
+          <label class="form-label mb-0 mt-1 mx-3" for="customFile">Upload Avatar Picture (optional):</label>
+          <input type="file" name="avatar" class="form-control" id="avatar" />
+        </div>
+        <a href='login.html'>
+          <button id="register-btn" type="submit" class="btn btn-success">Register</button>
+        </a>
+      </form>
+    </div>
+
+    <div>
+      Already have an account? <a href="/login" class="account">Log in here</a>!
+    </div>
+  </section>
+</body>
+<script src="pages/register.js"></script>

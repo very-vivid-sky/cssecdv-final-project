@@ -1,0 +1,125 @@
+[{
+  "_id": {
+    "$oid": "65f1d2756211c35a42385183"
+  },
+  "userAcc": {
+    "$oid": "660fe787ae26ca8d8c21a1f7"
+  },
+  "reviewBody": "the salad was good and the venue is on spot",
+  "restaurantAcc": {
+    "$oid": "65ed2d6ae2ad6c682dff1d1c"
+  },
+  "rating": 4,
+  "helpful": 1,
+  "nothelpful": 0,
+  "images": [
+    {
+      "path": "/uploads/1710346869494.jpg"
+    },
+    {
+      "path": "/uploads/1710346869495.jpeg"
+    }
+  ],
+  "createdAt": {
+    "$date": "2024-03-13T16:21:09.514Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-13T16:21:09.514Z"
+  },
+  "establishmentResponse": {
+    "body": "Thank you for the review! We hope you visit again!"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65f1d2bb6211c35a4238518b"
+  },
+  "userAcc": {
+    "$oid": "660fe73eae26ca8d8c21a1f3"
+  },
+  "reviewBody": "This little gem is a few walks away from Benilde and St. Scholastica. Went here for early lunch, so it didn't really get crowded. At first we thought it was a little bit pricey, but the dishes and the drinks were actually filling. I over-ordered even, by getting shrimp adlai omurice and Asian chicken salad. By the time I got to the omurice, I was already almost full",
+  "restaurantAcc": {
+    "$oid": "65ed2d6ae2ad6c682dff1d1c"
+  },
+  "rating": 5,
+  "helpful": 0,
+  "nothelpful": 0,
+  "images": [],
+  "createdAt": {
+    "$date": "2024-03-13T16:22:19.448Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-13T16:22:19.448Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65f1d42b6211c35a4238518d"
+  },
+  "userAcc": {
+    "$oid": "660fe7deae26ca8d8c21a1fa"
+  },
+  "reviewBody": "I don't really like how they have limited options when it comes to protein selectons",
+  "restaurantAcc": {
+    "$oid": "65ed2d6ae2ad6c682dff1d1c"
+  },
+  "rating": 3,
+  "helpful": 0,
+  "nothelpful": 0,
+  "images": [],
+  "createdAt": {
+    "$date": "2024-03-20T16:28:27.299Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-20T16:28:27.299Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65f1d44e6211c35a4238518f"
+  },
+  "userAcc": {
+    "$oid": "660fe80aae26ca8d8c21a1fe"
+  },
+  "reviewBody": "I love their garlic confit toast! ",
+  "restaurantAcc": {
+    "$oid": "65ed2d6ae2ad6c682dff1d1c"
+  },
+  "rating": 5,
+  "helpful": 0,
+  "nothelpful": 0,
+  "images": [],
+  "createdAt": {
+    "$date": "2024-03-13T16:29:02.392Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-13T16:29:02.392Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "65f1d47e6211c35a42385191"
+  },
+  "userAcc": {
+    "$oid": "660fe853ae26ca8d8c21a202"
+  },
+  "reviewBody": "Good ambiance, good food, good customer service!",
+  "restaurantAcc": {
+    "$oid": "65ed2d6ae2ad6c682dff1d1c"
+  },
+  "rating": 5,
+  "helpful": 2,
+  "nothelpful": 4,
+  "images": [],
+  "createdAt": {
+    "$date": "2024-03-13T16:29:50.325Z"
+  },
+  "updatedAt": {
+    "$date": "2024-03-13T16:29:50.325Z"
+  },
+  "__v": 0
+}]

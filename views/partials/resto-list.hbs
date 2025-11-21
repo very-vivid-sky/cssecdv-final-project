@@ -1,0 +1,16 @@
+{{#each restaurants}}
+	<a href='/restaurant/{{_id}}' class="btn service-card p-0" name="{{_id}}">
+		<img src='{{bannerPhoto}}' class="object-fit-cover">
+		<div class="display-flex flex-column align-items-center p-2">
+			<h2>{{name}}</h2>
+				{{#renderStars rating}}{{/renderStars}}
+			<div class="rating-text mx-2">{{rating}}</div>
+			<!--
+			<div class="sample-review">
+				{{review}}
+			</div>
+			<div class="user">{{review-user}}<b>{{review-rating}}</b></div>
+			-->
+		</div>
+	</a>
+{{/each}}

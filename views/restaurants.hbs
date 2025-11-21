@@ -1,0 +1,18 @@
+{{#if clientType}}
+  {{>clientheader}}
+{{else}}
+  {{>guestheader}}
+{{/if}}
+
+
+<section class="container d-flex flex-column min-vh-100">
+	<h1>Restaurants</h1>
+	<div class="container row px-0 d-flex justify-content-center gap-3">
+
+	{{> resto-list}}
+	</div>
+
+
+</div>
+</section>
+
