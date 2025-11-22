@@ -47,18 +47,7 @@ const reviewController = {
             });
             review.save(); // save
 
-            // update average rating
-            /*
-            helper.getAllReviews(resId, function(revList) {
-                let ave = 0;
-                for (let r in revList) { ave += r.rating; }
-                ave = ave/revList.length;
-
-                Restaurant.collection.updateOne({ "_id": resId }, {"$set": {"rating": ave}})
-            })
-            */
-
-            resp.redirect('back');
+            resp.redirect(req.get("Referrer") || "/");
         } catch (error) {
             console.log(error);
             resp.status(500).send({ message: error.message });
