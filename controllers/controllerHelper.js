@@ -4,6 +4,27 @@ const Review = require('../models/reviewSchema.js');
 const app = require("../app.js");
 
 const helper = {
+  
+	// Fetches the 403 page
+	get403Page: async function (req, resp) {
+		resp.status(403).render("error-403", {
+		  title: "Forbidden",
+		  layout: "index",
+		  clientType: helper.isLoggedIn(req)
+		})
+	  },
+
+	  // Fetches the 404 page
+	  get404Page: async function (req, resp) {
+		resp.status(404).render("error-404", {
+		  title: "Page not found",
+		  layout: "index",
+		  clientType: helper.isLoggedIn(req)
+		})
+	  },
+
+
+
 	getUserFromData: async function(key, val, fn) {
 		let search = {};
 		search[key] = val;
@@ -42,21 +63,6 @@ const helper = {
 
 
 	isLoggedIn: function(req) {
-		/*
-		// not sure if how much of this is overthinking for this stage.
-		// but i know we're going to involve sessions eventually
-		// it's probably gonna be async, so let's also have this be an async
-		User.findOne({_id: this.currUser}).then(function(user) {
-			fn(user.clientType != "guest");
-		})
-		.catch((error) => {
-			// throw up
-			throw(error);
-		});
-		*/
-
-		// turns out: much simpler on this end with sessions
-		// it's just one line
 		return (req.session.userId != undefined) 
 	},
 

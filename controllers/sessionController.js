@@ -7,6 +7,12 @@ const saltRounds = 5;
 
 const sessionController = {
 	login: function(req, resp) {
+        // deny if logged in already
+        if (helper.isLoggedIn(req)) {
+            helper.get403Page(req, resp);
+            return;
+        }
+
 		// TODO encryption
         let searchQuery = { userEmail: req.body.email, password: req.body.password };
         // get data
@@ -46,6 +52,10 @@ const sessionController = {
             req.session.destroy(function() {
                 resp.redirect("/");
             })
+        } else {
+            // deny if logged out already
+            helper.get403Page(req, resp);
+            return;
         }
     }
 

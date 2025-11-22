@@ -7,6 +7,12 @@ const saltRounds = 5;
 const userController = {
 
     registerUser_get: async (req, resp) => {
+        // deny if logged in already
+        if (helper.isLoggedIn(req)) {
+            helper.get403Page(req, resp);
+            return;
+        }
+
         try {
             return resp.render('register', {
                 layout: 'index',
@@ -19,6 +25,12 @@ const userController = {
     },
 
     registerUser_post: async (req, resp) => {
+        // deny if logged in already
+        if (helper.isLoggedIn(req)) {
+            helper.get403Page(req, resp);
+            return;
+        }
+        
         let body = req.body
 
         if (body.password.length > 7) {
@@ -74,6 +86,12 @@ const userController = {
     },
 
     login_get: async (req, resp) => {
+        // deny if logged in already
+        if (helper.isLoggedIn(req)) {
+            helper.get403Page(req, resp);
+            return;
+        }
+
         try {
             resp.render('login', {
                 layout: 'index',
@@ -104,7 +122,8 @@ const userController = {
                     clientType: true
                 });
             } else {
-                resp.status(500).send({ message: "An error occured while loading your profile." });
+                helper.get403Page(req, resp);
+                return;
             }
         }).catch((error) => {
             console.log(error);

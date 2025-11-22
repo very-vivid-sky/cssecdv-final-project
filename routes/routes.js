@@ -8,6 +8,7 @@ const userController = require('../controllers/userController.js');
 const mainController = require('../controllers/mainController.js');
 const reviewController = require('../controllers/reviewController.js');
 const sessionController = require('../controllers/sessionController.js');
+const helper = require("../controllers/controllerHelper.js")
 
 const app = express();
 
@@ -52,6 +53,6 @@ app.post('/create-restaurant',restaurantController.createRestaurant);
 */
 
 // 404 route
-app.all("*", mainController.get404Page);
+app.all("*", helper.get404Page);
 
 module.exports = app;
