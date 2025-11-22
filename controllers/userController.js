@@ -19,8 +19,8 @@ const validatePassword_settings = {
     "minLength": 8,
     "uppercaseReq": true,
     "lowercaseReq": true,
-    "numberReq": true,
-    "specialReq": true,
+    "numberReq": false,
+    "specialReq": false,
 }
 
 // Message to send if invalid
