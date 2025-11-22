@@ -4,7 +4,30 @@ const User = require('../models/userSchema.js');
 const bcrypt = require('bcryptjs');
 const saltRounds = 5;
 
+// Checks if the (currently plaintext) password someone is using is currently valid
+function validatePassword(password) {
+    if (validatePassword_settings.minLength > 0 && password.length < validatePassword_settings.minLength) { return false; }
+    if (validatePassword_settings.uppercaseReq && !(/[A-Z]/.test(password))) { return false; }
+    if (validatePassword_settings.lowercaseReq && !(/[a-z]/.test(password))) { return false; }
+    if (validatePassword_settings.numberReq && !(/[0-9]/.test(password))) { return false; }
+    if (validatePassword_settings.specialReq && !(/[!@#$%^&*()\-_\\\/~`{}[\]|:;"'<>,.?+=]/.test(password))) { return false; }
+    return true;
+}
+
+// current password validation requirements
+const validatePassword_settings = {
+    "minLength": 8,
+    "uppercaseReq": true,
+    "lowercaseReq": true,
+    "numberReq": true,
+    "specialReq": true,
+}
+
+// Message to send if invalid
+const validatePassword_errorMsg = "Passwords are required to be at least 8 characters long, and have at least one uppercase and lowercase letter"
+
 const userController = {
+
 
     registerUser_get: async (req, resp) => {
         // deny if logged in already
@@ -33,7 +56,7 @@ const userController = {
         
         let body = req.body
 
-        if (body.password.length > 7) {
+        if (validatePassword(body.password)) {
             if (body.password == body.password2) {
                 helper.getUserFromData("userEmail", body.email, function(oldUser) {
                     if (oldUser == undefined) {
@@ -72,7 +95,7 @@ const userController = {
                 return resp.render('register', {
                     layout: 'index',
                     title: "Register",
-                    message: "Please re-enter your password"
+                    message: "Passwords do not match; please re-enter them"
                 });
             }
         } else {
@@ -80,7 +103,7 @@ const userController = {
             return resp.render('register', {
                 layout: 'index',
                 title: "Register",
-                message: "Passwords are required to be at least 8 characters long"
+                message: validatePassword_errorMsg
             });
         }
     },
