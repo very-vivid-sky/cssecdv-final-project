@@ -4,7 +4,52 @@ const Review = require('../models/reviewSchema.js');
 const app = require("../app.js");
 
 const helper = {
-  
+	
+	// checks if the user is logged in
+	isLoggedIn: function(req) {
+		return (req.session.userId != undefined) 
+	},
+
+    // function to validate access
+    validateAccess: async function (minRole, req, fn) {
+        // quickfail - if this pops up this is a issue with the newly written code
+        if (!["guest", "user", "manager", "admin"].includes(minRole)) {
+            throw `Invalid role written in validateAccess(): "${minRole}"`;
+            fn((minRole == "guest"), undefined);
+            return;
+        }
+
+        // get user id for later
+        // if invalid, assume we are a guest and compare as that
+        let userId = req.session.userId;
+        let isValid = false;
+        // if it /is/ undefined, assume that we are accessing as guest
+        if (userId == undefined) {
+            isValid = (minRole == "guest");
+            fn(isValid, undefined);
+            return;
+        } else {
+            helper.getUserFromData("_id", userId, function(user) {
+                // blocking if user doesn't even exist!
+                // fail safe - access as guest
+                if (user == undefined || user == null) {
+                    isValid = (minRole == "guest", undefined);
+                } else {
+                    switch(minRole) {
+                        case "guest": isValid = true; break;
+                        case "user": isValid = ["user", "manager", "admin"].includes(user.clientType); break;
+                        case "manager": isValid = ["manager"].includes(user.clientType); break;
+                        case "admin": isValid = ["admin"].includes(user.clientType); break;
+                    };
+                }
+        
+                // now run the function
+                fn(isValid, user);
+                return;
+            })
+        }
+    },
+
 	// Fetches the 403 page
 	get403Page: async function (req, resp) {
 		resp.status(403).render("error-403", {
@@ -24,7 +69,8 @@ const helper = {
 	  },
 
 
-
+	// gets a user by searching for an entry in the Users db
+	// with a matching key-value pair
 	getUserFromData: async function(key, val, fn) {
 		let search = {};
 		search[key] = val;
@@ -40,6 +86,7 @@ const helper = {
 		});
 	},
 
+	// gets a list of all users as an object, then runs function fn()
 	getAllUsers: function(fn) {
 		User.find({}).then(function(res) {
 			fn(res);
@@ -50,7 +97,7 @@ const helper = {
 		});
 	},
 
-	
+	// gets a list of all restaurants as an object, then runs function fn()
 	getAllRestaurants: function(fn) {
 		Restaurant.find({}).then(function(res) {
 			fn(res);
@@ -61,11 +108,7 @@ const helper = {
 		});
 	},
 
-
-	isLoggedIn: function(req) {
-		return (req.session.userId != undefined) 
-	},
-
+	// gets a restaurant as an object by searching for its id, then runs function fn()
 	getRestaurant: async function(resId, fn) {
 		Restaurant.findOne({_id: resId}).then(function(res) {
 			if (res != undefined) {
@@ -80,6 +123,7 @@ const helper = {
 		})
 	},
 
+	// gets a list of all reviews from a restaurant as an object, then runs function fn()
 	getAllReviews: async function(resId, fn) {
 		Review.find({restaurantAcc: resId})
 		.populate("userAcc")
@@ -90,6 +134,7 @@ const helper = {
 		})
 	},
 
+	// gets a list of all restaurants by a user, then runs function fn()
 	getAllReviewsBy: async function(userId, fn) {
 		Review.find({userAcc: userId}).then(fn)
 		.catch((error) => {
@@ -98,6 +143,7 @@ const helper = {
 		})
 	},
 
+	// formats time for display in the website
 	formatTime: function(h, m) {
 		let meridian = (h >= 12) ? "PM" : "AM";
 		if (h > 12) {h -= 12};
@@ -106,6 +152,7 @@ const helper = {
 		return `${h}:${m} ${meridian}`;
 	},
 
+	// generates a star display given a float between 0 and 5
 	generateStarHTML: function(s) {
 		// fail fast, fail now
 		if (s < 0 || s > 5) { throw `Invalid star rating ${s}` }
@@ -142,7 +189,7 @@ const helper = {
 
 	formatDateTime(d) {
 		return `${d.toDateString()}, ${helper.formatTime(d.getHours(), d.getMinutes())}`
-	}
+	},
 
 }
 

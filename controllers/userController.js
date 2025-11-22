@@ -119,25 +119,6 @@ const userController = {
                 }
             })
         }
-
-        /*
-        if (validatePassword(body.password)) {
-            if (body.password == body.password2) {
-                helper.getUserFromData("userEmail", body.email, function(oldUser) {
-                    if (oldUser == undefined) {
-                        // probably valid?
-    
-                        // salt password
-                    } else {
-
-                    }
-                })
-    
-            } else {
-            }
-        } else {
-        }
-        */
     },
 
     login_get: async (req, resp) => {
@@ -159,23 +140,33 @@ const userController = {
     },
 
     editUser_get: async (req, resp) => {
+        helper.validateAccess("admin", req, function(isValid, user) {
+            if (!isValid) {
+                // throw 403
+                return helper.get403Page(req, resp);
+            } else {
+                return resp.status(200).render('edit-user', {
+                    layout: 'index',
+                    title: "Profile",
+                    userName: user.userName,
+                    joined: user.createdAt.toDateString(),
+                    totalReviews: user.totalReviews,
+                    bio: user.userDetails,
+                    image: user.userPicture,
+                    userId: user._id,
+                    clientType: true
+                });
+            }
+        })
+
+        /*
         helper.getUserFromData("_id", req.session.userId, function (user) {
             if (user != undefined || user != null) {
                 let clientParentArr = [];
                 clientParentArr = user;
 
 
-                return resp.status(200).render('edit-user', {
-                    layout: 'index',
-                    title: "Profile",
-                    userName: clientParentArr.userName,
-                    joined: clientParentArr.createdAt.toDateString(),
-                    totalReviews: clientParentArr.totalReviews,
-                    bio: clientParentArr.userDetails,
-                    image: clientParentArr.userPicture,
-                    userId: clientParentArr,
-                    clientType: true
-                });
+
             } else {
                 helper.get403Page(req, resp);
                 return;
@@ -184,6 +175,7 @@ const userController = {
             console.log(error);
             resp.status(500).send({ message: "An error occured while loading your profile." });
         });
+        */
     },
 
     clientDetails_get: async (req, resp) => {

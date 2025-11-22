@@ -1,6 +1,5 @@
 const userModel = require('../models/userSchema.js')
 const express = require('express');
-const User = require('../models/userSchema.js');
 const helper = require('./controllerHelper.js');
 const bcrypt = require('bcryptjs');
 const saltRounds = 5;
@@ -57,7 +56,7 @@ const sessionController = {
             helper.get403Page(req, resp);
             return;
         }
-    }
+    },
 
 }
 
