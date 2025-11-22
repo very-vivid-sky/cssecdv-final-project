@@ -8,6 +8,7 @@ const mongoStore = require('connect-mongodb-session')(session);
 require("dotenv").config();
 
 const mongoURI = process.env.MONGODB;
+const mongoSecret = process.env.MONGODB_SECRET;
 
 mongoose
     .connect(mongoURI)
@@ -45,7 +46,7 @@ const routes = require('./routes/routes.js');
 
 app.use(express.static('public'));
 app.use(session({
-    secret: 'a secret fruit',
+    secret: mongoSecret,
     saveUninitialized: true, 
     resave: false,
     store: new mongoStore({ 

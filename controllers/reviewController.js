@@ -47,18 +47,7 @@ const reviewController = {
             });
             review.save(); // save
 
-            // update average rating
-            /*
-            helper.getAllReviews(resId, function(revList) {
-                let ave = 0;
-                for (let r in revList) { ave += r.rating; }
-                ave = ave/revList.length;
-
-                Restaurant.collection.updateOne({ "_id": resId }, {"$set": {"rating": ave}})
-            })
-            */
-
-            resp.redirect('back');
+            resp.redirect(req.get("Referrer") || "/");
         } catch (error) {
             console.log(error);
             resp.status(500).send({ message: error.message });
@@ -92,7 +81,9 @@ const reviewController = {
             { "text": "Edit reply", id: "owneredit" },
         ]
 
-        ownerId = ownerId.toString();
+        if (ownerId != undefined) {
+            ownerId = ownerId.toString();
+        }
         if (currId != undefined) {
             currId = currId.toString();
         }
@@ -152,7 +143,6 @@ const reviewController = {
         reviews.sort((a, b) => helper.compareDates(b.createdAt, a.createdAt) );
         // then helpful ratio
         reviews.sort((a, b) => (b.helpful - b.nothelpful) - (a.helpful - a.nothelpful));
-
 
         // sort for other cases
         switch(sortedBy) {

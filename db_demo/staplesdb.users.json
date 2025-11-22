@@ -7,7 +7,7 @@
   "password": "$2b$05$sot7GilfWtv9evzPxi4DM.dgVHBftOGY7vd3bV8ns.etvBFohLWeO",
   "userDetails": "",
   "totalReviews": 0,
-  "clientType": "user",
+  "clientType": "manager",
   "createdAt": {
     "$date": "2024-04-05T11:57:50.754Z"
   },
@@ -25,7 +25,7 @@
   "password": "$2b$05$xPV15oX90N4j6gM4IPvMEed5CtUNOCzsQWdEyJs3MCtAD2Lhqq2Ga",
   "userDetails": "",
   "totalReviews": 0,
-  "clientType": "user",
+  "clientType": "admin",
   "createdAt": {
     "$date": "2024-04-05T11:59:03.033Z"
   },
@@ -113,9 +113,9 @@
   "userName": "very-vivid-sky",
   "userEmail": "cy@test.com",
   "password": "$2b$05$cZbh.kPBW4v8F7NPOsqBCu230LXwz8khBwXL0DAUSCgIPZla.TaNu",
-  "userDetails": "",
+  "userDetails": "they/them / casual enjoyer of food and of display:flex",
   "totalReviews": 0,
-  "clientType": "user",
+  "clientType": "admin",
   "createdAt": {
     "$date": "2024-04-05T12:03:44.912Z"
   },

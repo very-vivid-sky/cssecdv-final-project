@@ -326,6 +326,7 @@ hr {
 }
 
 .members p {
+    text-align: center;
     font-family: 'Roboto';
     font-size: 50px;
     font-weight: bold;
