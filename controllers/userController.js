@@ -4,6 +4,12 @@ const User = require('../models/userSchema.js');
 const bcrypt = require('bcryptjs');
 const saltRounds = 5;
 
+// source: https://emailregex.com/
+const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+
+// Checks if the email is valid
+function validateEmail(email) { return emailRegex.test(email); }
+
 // Checks if the (currently plaintext) password someone is using is currently valid
 function validatePassword(password) {
     if (validatePassword_settings.minLength > 0 && password.length < validatePassword_settings.minLength) { return false; }
@@ -56,6 +62,65 @@ const userController = {
         
         let body = req.body
 
+        // perform validation checks
+        if (!validateEmail(body.email)) {
+            // error: email is not valid
+            return resp.render('register', {
+                layout: 'index',
+                title: "Register",
+                message: "Email does not seem to be valid"
+            });       
+        } else if (!validatePassword(body.password)) {
+            // error: password not validated against required standards
+            return resp.render('register', {
+                layout: 'index',
+                title: "Register",
+                message: validatePassword_errorMsg
+            });
+        } else if (body.password != body.password2) {
+            // error: pass1 and pass2 are not the same
+            return resp.render('register', {
+                layout: 'index',
+                title: "Register",
+                message: "Passwords do not match; please re-enter them"
+            });
+        } else {
+            // check performed last as to ensure that errors that do not
+            // require the server to check do not need to use unnecessary
+            // resources
+            helper.getUserFromData("userEmail", body.email, function(oldUser) {
+                if (oldUser != undefined) {
+                    // error: email exists
+                    resp.render("register", {
+                        layout: 'index',
+                        title: "Register",
+                        message: "Account already registered to email, please log in"
+                    });
+                } else {
+                    // all clear! add to db
+                    // salt password
+                    bcrypt.genSalt(saltRounds, function(err, salt) {
+                        bcrypt.hash(req.body.password, salt, function(err, hashedPass) {
+                            // add to db
+                            let user = new User({
+                                userName: req.body.username,
+                                userEmail: req.body.email,
+                                password: hashedPass,
+                                userDetails: req.body.bio,
+                                clientType: "user",
+                            })
+                            user.save().then(function() {
+                                // log in & redirect
+                                req.session.userId = user._id;
+                                resp.redirect("/");
+                            });
+                        })
+                    })
+                }
+            })
+        }
+
+        /*
         if (validatePassword(body.password)) {
             if (body.password == body.password2) {
                 helper.getUserFromData("userEmail", body.email, function(oldUser) {
@@ -63,49 +128,16 @@ const userController = {
                         // probably valid?
     
                         // salt password
-                        bcrypt.genSalt(saltRounds, function(err, salt) {
-                            bcrypt.hash(req.body.password, salt, function(err, hashedPass) {
-                                // add to db
-                                let user = new User({
-                                    userName: req.body.username,
-                                    userEmail: req.body.email,
-                                    password: hashedPass,
-                                    userDetails: req.body.bio,
-                                    clientType: "user",
-                                })
-                                user.save().then(function() {
-                                    // log in & redirect
-                                    req.session.userId = user._id;
-                                    resp.redirect("/");
-                                });
-                            })
-                        })
                     } else {
-                        // error: email exists
-                        resp.render("register", {
-                            layout: 'index',
-                            title: "Register",
-                            message: "Account registered to email, please log in"
-                        });
+
                     }
                 })
     
             } else {
-                // error: pass1 and pass2 are not the same
-                return resp.render('register', {
-                    layout: 'index',
-                    title: "Register",
-                    message: "Passwords do not match; please re-enter them"
-                });
             }
         } else {
-            // error: length less than 8
-            return resp.render('register', {
-                layout: 'index',
-                title: "Register",
-                message: validatePassword_errorMsg
-            });
         }
+        */
     },
 
     login_get: async (req, resp) => {
