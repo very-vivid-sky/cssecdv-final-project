@@ -50,4 +50,8 @@ app.get('/logout',userController.logOut_get);
 app.put('/restaurants/edit/:id',restaurantController.editRes);
 app.post('/create-restaurant',restaurantController.createRestaurant);
 */
+
+// 404 route
+app.all("*", mainController.get404Page);
+
 module.exports = app;

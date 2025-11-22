@@ -19,7 +19,16 @@ const mainController = {
       layout: "index",
       clientType: helper.isLoggedIn(req)
     })
-  }
+  },
+  
+  get404Page: async function (req, resp) {
+    resp.render("error-404", {
+      title: "Page not found",
+      layout: "index",
+      clientType: helper.isLoggedIn(req)
+    })
+  },
+
 }
 
 module.exports = mainController;
