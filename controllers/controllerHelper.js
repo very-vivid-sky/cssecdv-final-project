@@ -2,12 +2,35 @@ const User = require('../models/userSchema.js');
 const Restaurant = require('../models/restaurantSchema.js');
 const Review = require('../models/reviewSchema.js');
 const app = require("../app.js");
+const bcrypt = require('bcryptjs');
 
 const helper = {
 	
 	// checks if the user is logged in
 	isLoggedIn: function(req) {
 		return (req.session.userId != undefined) 
+	},
+
+	// use the given email and password to verify if it is the correct one for this account
+	verifyPasswordIsCorrect: async function (email, password, fn) {
+		// quickfail
+		if (email == undefined || password == undefined || email == "" || password == "") {
+			fn(false, undefined);
+			return;
+		}
+
+		helper.getUserFromData("userEmail", email, function (user) {
+			// user not found from email
+			if (user == undefined) { fn(false, undefined); return; }
+
+			// hash and compare pass with bcrypt
+			bcrypt.compare(user.password, password, function(error, res) {
+				// not a match
+				if (!res) { fn(false, undefined); return; }
+				// is a match
+				else { fn(true, user); return; }
+			})
+		});
 	},
 
     // function to validate access

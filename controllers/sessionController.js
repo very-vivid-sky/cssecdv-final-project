@@ -5,14 +5,13 @@ const bcrypt = require('bcryptjs');
 const saltRounds = 5;
 
 const sessionController = {
-	login: function(req, resp) {
+    login: function(req, resp) {
         // deny if logged in already
         if (helper.isLoggedIn(req)) {
             helper.get403Page(req, resp);
             return;
         }
 
-		// TODO encryption
         let searchQuery = { userEmail: req.body.email, password: req.body.password };
         // get data
 		helper.getUserFromData("userEmail", searchQuery.userEmail, function (user) {

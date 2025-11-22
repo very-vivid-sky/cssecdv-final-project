@@ -37,6 +37,7 @@ app.get('/login',userController.login_get);
 app.post('/login',sessionController.login);
 app.get('/user/:id', userController.clientDetails_get);
 app.get('/userdetails/', userController.editUser_get);
+app.post("/userdetails/", userController.editUser_post);
 app.get('/logout',sessionController.logout);
 
 //review routes

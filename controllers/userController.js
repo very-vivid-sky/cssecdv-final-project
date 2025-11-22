@@ -140,7 +140,7 @@ const userController = {
     },
 
     editUser_get: async (req, resp) => {
-        helper.validateAccess("admin", req, function(isValid, user) {
+        helper.validateAccess("user", req, function(isValid, user) {
             if (!isValid) {
                 // throw 403
                 return helper.get403Page(req, resp);
@@ -158,24 +158,90 @@ const userController = {
                 });
             }
         })
+    },
 
-        /*
-        helper.getUserFromData("_id", req.session.userId, function (user) {
-            if (user != undefined || user != null) {
-                let clientParentArr = [];
-                clientParentArr = user;
-
-
-
-            } else {
-                helper.get403Page(req, resp);
-                return;
+    editUser_post: async (req, resp) => {
+        helper.validateAccess("user", req, function(isValid, user) {
+            // quickfail
+            if (!isValid) {
+                return helper.get403Page(req, resp);
             }
-        }).catch((error) => {
-            console.log(error);
-            resp.status(500).send({ message: "An error occured while loading your profile." });
-        });
-        */
+
+            let body = req.body
+            
+            let userId = user._id;
+            let changes = 0;
+            let renderObject = {
+                layout: 'index',
+                title: "Profile",
+                clientType: helper.isLoggedIn(req),
+                
+                userName: user.userName,
+                joined: user.createdAt.toDateString(),
+                totalReviews: user.totalReviews,
+                bio: user.userDetails,
+                image: user.userPicture,
+                userId: user._id,
+            }
+
+            if (body.username != "" || body.password_new != "") {
+                // require a valid password authentication before accepting
+                // block of checks for common errors
+                if (body.password_old == "") {
+                    renderObject["message_warning"] = "You need to use your password to change it or your username.";
+                    return resp.render('edit-user', renderObject);
+                } else if (body.password_new != "" && !validatePassword(body.password_new)) {
+                    renderObject["message_warning"] = validatePassword_errorMsg;
+                    return resp.render('edit-user', renderObject);
+                } else if (body.password_new != "" && body.password_old == "") {
+                    renderObject["message_warning"] = "Please type your password twice.";
+                    return resp.render('edit-user', renderObject);
+                } else if (body.password_new != "" && (body.password_new != body.password_retype)) {
+                    renderObject["message_warning"] = "Passwords are not the same. Please retype them.";
+                    return resp.render('edit-user', renderObject);
+                }
+
+                // compare with current password if valid
+                helper.verifyPasswordIsCorrect(user.userEmail, body.password_old, function (res) {
+                    // only if password is to be set: salt and hash it
+                    if (body.password_new != "") {
+                        bcrypt.genSalt(saltRounds, function(err, salt) {
+                            bcrypt.hash(req.body.password_new, salt, function(err, hashedPass) {
+                                user.password = hashedPass;
+                                if (body.username != "") { user.userName = body.username; }
+                                if (body.bio != "") { user.userDetails = body.bio; }
+                                user.save().then(function() {
+                                    renderObject["message_success"] = "Successfully changed your password and edited your profile!"
+                                    return resp.render('edit-user', renderObject);
+                                })
+                            })
+                        })
+                    } else {
+                        // other changes only
+                        if (body.username != "") { user.userName = body.username; }
+                        if (body.bio != "") { user.userDetails = body.bio; }
+                        user.save().then(function() {
+                            renderObject["message_success"] = "Successfully changed your username and edited your profile!"
+                            return resp.render('edit-user', renderObject);
+                        })
+                    }
+                });
+            } else {
+                // more common operations only
+                if (body.bio != "") { user.userDetails = body.bio; changes++; }
+                
+                // if not empty
+                if (changes > 0) {
+                    user.save().then(function() {
+                        renderObject["message_success"] = "Successfully edited your public profile details!"
+                        return resp.render('edit-user', renderObject);
+                    })
+                } else {
+                    return resp.render('edit-user', renderObject);
+                }
+
+            }
+        })
     },
 
     clientDetails_get: async (req, resp) => {
@@ -244,7 +310,6 @@ const userController = {
             console.log(error);
             resp.status(500).send({ message: error.message });
         });
-
     },
 
 };
