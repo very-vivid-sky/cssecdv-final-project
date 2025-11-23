@@ -26,6 +26,36 @@ const isLoggedIn = (req, resp, next) => {
 };
 
 /**
+ * Middleware to check if user is a manager (or admin)
+ */
+const isManager = (req, resp, next) => {
+    if (!req.session.userId) {
+        return resp.status(401).redirect('/login');
+    }
+
+    if (req.session.role !== 'manager' && req.session.role !== 'admin') {
+        return resp.status(403).send({ message: "Access denied. Manager privileges required." });
+    }
+
+    next();
+};
+
+/**
+ * Middleware to check if user is strictly a manager (admins excluded)
+ */
+const isStrictManager = (req, resp, next) => {
+    if (!req.session.userId) {
+        return resp.status(401).redirect('/login');
+    }
+
+    if (req.session.role !== 'manager') {
+        return resp.status(403).send({ message: "Access denied. Manager privileges required." });
+    }
+
+    next();
+};
+
+/**
  * Middleware to check if user account is active
  * Call this before any protected routes to ensure disabled users can't perform actions
  */
@@ -57,5 +87,7 @@ const isAccountActive = (req, resp, next) => {
 module.exports = {
     isAdmin,
     isLoggedIn,
-    isAccountActive
+    isAccountActive,
+    isManager,
+    isStrictManager
 };

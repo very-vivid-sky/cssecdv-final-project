@@ -1,0 +1,82 @@
+{{#if (eq clientType "manager")}}
+<div class="container mt-5">
+    <h1 class="mb-4">Flagged Reviews</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Restaurant</th>
+                            <th>Rating</th>
+                            <th>Comment</th>
+                            <th>Flagged At</th>
+                            <th>Flagged By</th>
+                            <th>Reason</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each reviews}}
+                        <tr data-review-id="{{this.id}}">
+                            <td>{{this.username}}</td>
+                            <td>{{this.restaurantName}}</td>
+                            <td>{{this.rating}}</td>
+                            <td>{{this.comment}}</td>
+                            <td>{{this.flaggedAt}}</td>
+                            <td>{{this.flaggedBy}}</td>
+                            <td>{{this.flagReason}}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-success btn-sm unflagBtn" data-id="{{this.id}}">Keep</button>
+                                    <button class="btn btn-danger btn-sm removeBtn" data-id="{{this.id}}">Remove</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.unflagBtn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const id = this.dataset.id;
+        if (!confirm('Mark this review as acceptable (remove flag)?')) return;
+        try {
+            const res = await fetch(`/manager/review/${id}/unflag`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message || 'Unflagged');
+                location.reload();
+            } else alert(data.message || 'Failed');
+        } catch (e) { console.error(e); alert('Error'); }
+    });
+});
+
+document.querySelectorAll('.removeBtn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const id = this.dataset.id;
+        if (!confirm('Permanently remove this review?')) return;
+        try {
+            const res = await fetch(`/manager/review/${id}/remove`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                alert(data.message || 'Removed');
+                location.reload();
+            } else alert(data.message || 'Failed');
+        } catch (e) { console.error(e); alert('Error'); }
+    });
+});
+</script>
+
+{{else}}
+<div class="container mt-5">
+    <div class="alert alert-danger">Access denied. Manager only.</div>
+</div>
+{{/if}}

@@ -27,8 +27,7 @@ const adminController = {
                         email: u.userEmail,
                         role: u.clientType,
                         isActive: u.isActive,
-                        joined: u.createdAt.toDateString(),
-                        totalReviews: u.totalReviews
+                        joined: u.createdAt.toDateString()
                     }))
                 });
             });
