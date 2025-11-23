@@ -1,0 +1,330 @@
+{{>adminheader}}
+
+{{#if (eq clientType "admin")}}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="mb-4">Admin Dashboard</h1>
+            
+            <!-- Search and Filter Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search users by username or email...">
+                        </div>
+                        <div class="col-md-3">
+                            <select id="roleFilter" class="form-select">
+                                <option value="">All Roles</option>
+                                <option value="user">User</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="statusFilter" class="form-select">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="disabled">Disabled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>User Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Joined</th>
+                                    <th>Reviews</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                {{#each users}}
+                                <tr class="user-row" data-user-id="{{this.id}}" data-role="{{this.role}}" data-status="{{#if this.isActive}}active{{else}}disabled{{/if}}">
+                                    <td>{{this.username}}{{#if (eq @root.currentUserId this.id)}} <span class="badge bg-info">You</span>{{/if}}</td>
+                                    <td>{{this.email}}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {{#if (eq this.role "admin")}}bg-danger
+                                            {{else if (eq this.role "manager")}}bg-warning text-dark
+                                            {{else}}bg-secondary{{/if}}">
+                                            {{this.role}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{#if this.isActive}}
+                                            <span class="badge bg-success">Active</span>
+                                        {{else}}
+                                            <span class="badge bg-danger">Disabled</span>
+                                        {{/if}}
+                                    </td>
+                                    <td>{{this.joined}}</td>
+                                    <td>{{this.totalReviews}}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-primary changeRoleBtn {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}" data-bs-toggle="modal" data-bs-target="#roleModal" data-user-id="{{this.id}}" data-username="{{this.username}}" data-current-role="{{this.role}}" {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}>
+                                                Change Role
+                                            </button>
+                                            {{#if this.isActive}}
+                                                <button type="button" class="btn btn-outline-danger disableBtn {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}" data-user-id="{{this.id}}" data-username="{{this.username}}" {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}>
+                                                    Disable
+                                                </button>
+                                            {{else}}
+                                                <button type="button" class="btn btn-outline-success enableBtn {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}" data-user-id="{{this.id}}" data-username="{{this.username}}" {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}>
+                                                    Enable
+                                                </button>
+                                            {{/if}}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Change Modal -->
+<div class="modal fade" id="roleModal" tabindex="-1" aria-labelledby="roleModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog" style="z-index: 1070;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="roleModalLabel">Change User Role</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Change role for: <strong id="modalUsername"></strong></p>
+                <div class="form-group">
+                    <label for="newRoleSelect" class="form-label">New Role:</label>
+                    <select id="newRoleSelect" class="form-select">
+                        <option value="">Select a role...</option>
+                        <option value="user">User</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmRoleChangeBtn">Change Role</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Message -->
+<div id="successAlert" class="alert alert-success alert-dismissible fade position-fixed top-0 start-50 translate-middle-x mt-3" style="display:none; z-index: 1050;">
+    <span id="successMessage"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+
+<!-- Error Message -->
+<div id="errorAlert" class="alert alert-danger alert-dismissible fade position-fixed top-0 start-50 translate-middle-x mt-3" style="display:none; z-index: 1050;">
+    <span id="errorMessage"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+
+<script>
+let currentUserId = null;
+
+// Event listeners for role change button
+document.querySelectorAll('.changeRoleBtn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        currentUserId = this.dataset.userId;
+        document.getElementById('modalUsername').textContent = this.dataset.username;
+        document.getElementById('newRoleSelect').value = this.dataset.currentRole;
+    });
+});
+
+// Event listener for confirm role change
+document.getElementById('confirmRoleChangeBtn').addEventListener('click', async function() {
+    const newRole = document.getElementById('newRoleSelect').value;
+    
+    if (!newRole) {
+        showError('Please select a role');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/admin/users/change-role', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: currentUserId,
+                newRole: newRole
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showSuccess(data.message);
+            // Close modal and reload table
+            const modal = bootstrap.Modal.getInstance(document.getElementById('roleModal'));
+            modal.hide();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showError(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred while changing the user role');
+    }
+});
+
+// Event listeners for disable button
+document.querySelectorAll('.disableBtn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const userId = this.dataset.userId;
+        const username = this.dataset.username;
+
+        if (confirm(`Are you sure you want to disable ${username}'s account?`)) {
+            try {
+                const response = await fetch('/api/admin/users/disable', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId: userId })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess(data.message);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred while disabling the account');
+            }
+        }
+    });
+});
+
+// Event listeners for enable button
+document.querySelectorAll('.enableBtn').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const userId = this.dataset.userId;
+        const username = this.dataset.username;
+
+        if (confirm(`Are you sure you want to enable ${username}'s account?`)) {
+            try {
+                const response = await fetch('/api/admin/users/enable', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ userId: userId })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess(data.message);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showError(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred while enabling the account');
+            }
+        }
+    });
+});
+
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+document.getElementById('roleFilter').addEventListener('change', filterTable);
+document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+
+    document.querySelectorAll('.user-row').forEach(row => {
+        const username = row.cells[0].textContent.toLowerCase();
+        const email = row.cells[1].textContent.toLowerCase();
+        const role = row.dataset.role;
+        const status = row.dataset.status;
+
+        let matchesSearch = username.includes(searchTerm) || email.includes(searchTerm);
+        let matchesRole = !roleFilter || role === roleFilter;
+        let matchesStatus = !statusFilter || status === statusFilter;
+
+        row.style.display = matchesSearch && matchesRole && matchesStatus ? '' : 'none';
+    });
+}
+
+function showSuccess(message) {
+    const alert = document.getElementById('successAlert');
+    document.getElementById('successMessage').textContent = message;
+    alert.style.display = 'block';
+    setTimeout(() => {
+        alert.style.display = 'none';
+    }, 5000);
+}
+
+function showError(message) {
+    const alert = document.getElementById('errorAlert');
+    document.getElementById('errorMessage').textContent = message;
+    alert.style.display = 'block';
+    setTimeout(() => {
+        alert.style.display = 'none';
+    }, 5000);
+}
+</script>
+
+<style>
+.table-responsive {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.modal-backdrop {
+    z-index: 1050;
+}
+
+#roleModal {
+    z-index: 1060 !important;
+}
+
+#roleModal .modal-dialog {
+    z-index: 1070 !important;
+}
+</style>
+{{else}}
+<div class="container mt-5">
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Access Denied</h4>
+        <p>You do not have permission to access the admin dashboard. Only administrators can access this page.</p>
+    </div>
+</div>
+{{/if}}

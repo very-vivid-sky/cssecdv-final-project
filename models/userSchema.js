@@ -40,6 +40,11 @@ const userSchema = mongoose.Schema(
             type: String, 
             default: "guest"
         },
+
+        isActive: {
+            type: Boolean,
+            default: true
+        },
         
         failedLoginAttempts: {
             type: Number,
