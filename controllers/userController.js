@@ -8,34 +8,6 @@ const User = require('../models/userSchema.js');
 const bcrypt = require('bcryptjs');
 const saltRounds = 5;
 
-// source: https://emailregex.com/
-const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
-// Checks if the email is valid
-function validateEmail(email) { return emailRegex.test(email); }
-
-// current password validation requirements
-const validatePassword_settings = {
-  minLength: 8,
-  uppercaseReq: true,
-  lowercaseReq: true,
-  numberReq: false,
-  specialReq: false,
-};
-
-// Checks if the (plaintext) password meets policy
-function validatePassword(password) {
-  if (validatePassword_settings.minLength > 0 && password.length < validatePassword_settings.minLength) return false;
-  if (validatePassword_settings.uppercaseReq && !(/[A-Z]/.test(password))) return false;
-  if (validatePassword_settings.lowercaseReq && !(/[a-z]/.test(password))) return false;
-  if (validatePassword_settings.numberReq && !(/[0-9]/.test(password))) return false;
-  if (validatePassword_settings.specialReq && !(/[!@#$%^&*()\-_\\\/~`{}[\]|:;"'<>,.?+=]/.test(password))) return false;
-  return true;
-}
-
-const validatePassword_errorMsg =
-  "Passwords are required to be at least 8 characters long, and have at least one uppercase and lowercase letter";
-
 const userController = {
 
   registerUser_get: async (req, resp) => {
@@ -283,58 +255,6 @@ editUser_post: async (req, resp) => {
 
   });
 },
-
-            user.save().then(async () => {
-             
-              if (auditLogger?.logRegistration) {
-                await auditLogger.logRegistration(
-                  user._id,
-                  user.userEmail,
-                  req.auditContext?.ipAddress,
-                  req.auditContext?.userAgent
-                );
-              }
-
-
-              req.session.userId = user._id;
-              req.session.role = user.clientType;
-
-              return resp.redirect("/");
-            }).catch(async (saveErr) => {
-            
-              if (auditLogger?.logAuditEvent) {
-                await auditLogger.logAuditEvent(
-                  'REGISTRATION',
-                  'failure',
-                  {
-                    userId: email,
-                    resource: 'User',
-                    ipAddress: req.auditContext?.ipAddress,
-                    userAgent: req.auditContext?.userAgent,
-                    errorMessage: saveErr.message
-                  }
-                );
-              }
-              console.error('Registration save error:', saveErr);
-              return resp.status(500).render('register', {
-                layout: 'index',
-                title: 'Register',
-                message: 'Registration failed. Please try again.'
-              });
-            });
-          });
-        });
-      });
-    } catch (error) {
-      console.log(error);
-      return resp.status(500).render('register', {
-        layout: 'index',
-        title: 'Register',
-        message: 'Registration failed. Please try again.'
-      });
-    }
-  },
-
 
   login_get: async (req, resp) => {
     if (helper.isLoggedIn(req)) {
