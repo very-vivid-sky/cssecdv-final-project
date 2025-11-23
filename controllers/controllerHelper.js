@@ -11,28 +11,6 @@ const helper = {
 		return (req.session.userId != undefined) 
 	},
 
-	// use the given email and password to verify if it is the correct one for this account
-	verifyPasswordIsCorrect: async function (email, password, fn) {
-		// quickfail
-		if (email == undefined || password == undefined || email == "" || password == "") {
-			fn(false, undefined);
-			return;
-		}
-
-		helper.getUserFromData("userEmail", email, function (user) {
-			// user not found from email
-			if (user == undefined) { fn(false, undefined); return; }
-
-			// hash and compare pass with bcrypt
-			bcrypt.compare(user.password, password, function(error, res) {
-				// not a match
-				if (!res) { fn(false, undefined); return; }
-				// is a match
-				else { fn(true, user); return; }
-			})
-		});
-	},
-
     // function to validate access
     validateAccess: async function (minRole, req, fn) {
         // quickfail - if this pops up this is a issue with the newly written code
@@ -97,7 +75,9 @@ const helper = {
 	getUserFromData: async function(key, val, fn) {
 		let search = {};
 		search[key] = val;
-		User.findOne(search).then(function(res) {
+		let res = undefined;
+		/*
+		await User.findOne(search).then(async function(res) {
 			if (fn != null) {
 				fn(res);
 			}
@@ -107,6 +87,12 @@ const helper = {
 			// throw up
 			throw(error);
 		});
+		*/
+		await User.findOne(search).then(async function(found) {
+			if (fn != null) { await fn(found) }
+			res = found;
+		})
+		return res;
 	},
 
 	// gets a list of all users as an object, then runs function fn()

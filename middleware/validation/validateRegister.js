@@ -1,26 +1,6 @@
 const User = require('../../models/userSchema');
 const auditLogger = require('../auditLogger');
-
-// source: https://emailregex.com/
-const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
-// Password policy
-const validatePassword_settings = {
-    minLength: 8,
-    uppercaseReq: true,
-    lowercaseReq: true,
-    numberReq: true,
-    specialReq: true,
-};
-
-function validatePassword(password) { 
-    if (password.length < validatePassword_settings.minLength) return false;
-    if (validatePassword_settings.uppercaseReq && !(/[A-Z]/.test(password))) return false;
-    if (validatePassword_settings.lowercaseReq && !(/[a-z]/.test(password))) return false;
-    if (validatePassword_settings.numberReq && !(/[0-9]/.test(password))) return false;
-    if (validatePassword_settings.specialReq && !(/[!@#$%^&*()\-_\\\/~`{}[\]|:;"'<>,.?+=]/.test(password))) return false;
-    return true;
-}
+const authMiddleware = require("../../controllers/authMiddleware.js");
 
 module.exports = async function validateRegister(req, res, next) {
     const body = req.body;
@@ -30,7 +10,7 @@ module.exports = async function validateRegister(req, res, next) {
     const username = body.username?.trim();
 
     //  Check email
-    if (!emailRegex.test(email)) {
+    if (!authMiddleware.emailRegex.test(email)) {
         return res.render("register", {
             layout: "index",
             title: "Register",
@@ -57,7 +37,7 @@ module.exports = async function validateRegister(req, res, next) {
     }
 
     //  Check password policy
-    if (!validatePassword(password)) {
+    if (!authMiddleware.validatePassword(password)) {
         return res.render("register", {
             layout: "index",
             title: "Register",
