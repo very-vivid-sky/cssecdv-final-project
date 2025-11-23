@@ -4,6 +4,7 @@ const Restaurant = require('../models/restaurantSchema.js');
 const User = require('../models/userSchema.js');
 const Review = require('../models/reviewSchema.js');
 const auditLogger = require('../middleware/auditLogger.js');
+const bcrypt = require('bcryptjs');
 var userId = "65f05288fe85e01b514bbdab";
 
 const reviewController = {
@@ -266,6 +267,27 @@ const reviewController = {
     unflagReview: async function(req, resp) {
         try {
             const reviewId = req.params.id;
+            const password = req.body && req.body.password ? req.body.password : null;
+            const managerId = req.session.userId;
+
+            // require manager password for sensitive action
+            if (!password) {
+                try { await auditLogger.logAccessDenied(managerId || 'ANONYMOUS', 'Review', reviewId, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'MISSING_MANAGER_PASSWORD'); } catch(e) { console.error('Audit error', e); }
+                return resp.status(401).json({ message: 'Authentication required' });
+            }
+
+            const manager = await User.findById(managerId);
+            if (!manager) {
+                try { await auditLogger.logAccessDenied(managerId || 'ANONYMOUS', 'Review', reviewId, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'INVALID_MANAGER'); } catch(e) { console.error('Audit error', e); }
+                return resp.status(401).json({ message: 'Authentication required' });
+            }
+
+            const match = bcrypt.compareSync(password, manager.password);
+            if (!match) {
+                try { await auditLogger.logAccessDenied(managerId || 'ANONYMOUS', 'Review', reviewId, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'INVALID_MANAGER_PASSWORD'); } catch(e) { console.error('Audit error', e); }
+                return resp.status(401).json({ message: 'Authentication required' });
+            }
+
             const review = await Review.findById(reviewId);
             if (!review) return resp.status(404).json({ message: 'Review not found' });
 
@@ -296,6 +318,26 @@ const reviewController = {
     removeReview: async function(req, resp) {
         try {
             const reviewId = req.params.id;
+            const password = req.body && req.body.password ? req.body.password : null;
+            const managerId = req.session.userId;
+
+            if (!password) {
+                try { await auditLogger.logAccessDenied(managerId || 'ANONYMOUS', 'Review', reviewId, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'MISSING_MANAGER_PASSWORD'); } catch(e) { console.error('Audit error', e); }
+                return resp.status(401).json({ message: 'Authentication required' });
+            }
+
+            const manager = await User.findById(managerId);
+            if (!manager) {
+                try { await auditLogger.logAccessDenied(managerId || 'ANONYMOUS', 'Review', reviewId, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'INVALID_MANAGER'); } catch(e) { console.error('Audit error', e); }
+                return resp.status(401).json({ message: 'Authentication required' });
+            }
+
+            const match = bcrypt.compareSync(password, manager.password);
+            if (!match) {
+                try { await auditLogger.logAccessDenied(managerId || 'ANONYMOUS', 'Review', reviewId, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'INVALID_MANAGER_PASSWORD'); } catch(e) { console.error('Audit error', e); }
+                return resp.status(401).json({ message: 'Authentication required' });
+            }
+
             const review = await Review.findById(reviewId);
             if (!review) return resp.status(404).json({ message: 'Review not found' });
 

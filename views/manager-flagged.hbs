@@ -43,35 +43,122 @@
     </div>
 </div>
 
+<!-- Password Confirmation Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog" style="z-index: 1070;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passwordModalLabel">Confirm with Your Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="passwordActionDescription">This is a sensitive action. Please enter your password to confirm.</p>
+                <div class="form-group">
+                    <label for="managerPassword" class="form-label">Your Password:</label>
+                    <input type="password" id="managerPassword" class="form-control" placeholder="Enter your password">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmPasswordBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success / Error alerts -->
+<div id="successAlert" class="alert alert-success alert-dismissible fade position-fixed top-0 start-50 translate-middle-x mt-3" style="display:none; z-index: 9999;">
+    <span id="successMessage"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+
+<div id="errorAlert" class="alert alert-danger alert-dismissible fade position-fixed top-0 start-50 translate-middle-x mt-3" style="display:none; z-index: 9999;">
+    <span id="errorMessage"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+
 <script>
+let pendingAction = null; // 'unflag' or 'remove'
+let pendingReviewId = null;
+
+function showSuccess(message) {
+    const alert = document.getElementById('successAlert');
+    document.getElementById('successMessage').textContent = message;
+    alert.style.display = 'block';
+    setTimeout(() => { alert.style.display = 'none'; }, 4000);
+}
+
+function showError(message) {
+    const alert = document.getElementById('errorAlert');
+    document.getElementById('errorMessage').textContent = message;
+    alert.style.display = 'block';
+    setTimeout(() => { alert.style.display = 'none'; }, 6000);
+}
+
 document.querySelectorAll('.unflagBtn').forEach(btn => {
-    btn.addEventListener('click', async function() {
+    btn.addEventListener('click', function() {
         const id = this.dataset.id;
-        if (!confirm('Mark this review as acceptable (remove flag)?')) return;
-        try {
-            const res = await fetch(`/manager/review/${id}/unflag`, { method: 'POST' });
-            const data = await res.json();
-            if (res.ok) {
-                alert(data.message || 'Unflagged');
-                location.reload();
-            } else alert(data.message || 'Failed');
-        } catch (e) { console.error(e); alert('Error'); }
+        // set pending action and show password modal
+        pendingAction = 'unflag';
+        pendingReviewId = id;
+        document.getElementById('passwordActionDescription').textContent = 'Marking this review as acceptable is a sensitive action. Please enter your password to confirm.';
+        document.getElementById('managerPassword').value = '';
+        const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+        passwordModal.show();
     });
 });
 
 document.querySelectorAll('.removeBtn').forEach(btn => {
-    btn.addEventListener('click', async function() {
+    btn.addEventListener('click', function() {
         const id = this.dataset.id;
-        if (!confirm('Permanently remove this review?')) return;
-        try {
-            const res = await fetch(`/manager/review/${id}/remove`, { method: 'POST' });
-            const data = await res.json();
-            if (res.ok) {
-                alert(data.message || 'Removed');
-                location.reload();
-            } else alert(data.message || 'Failed');
-        } catch (e) { console.error(e); alert('Error'); }
+        // set pending action and show password modal
+        pendingAction = 'remove';
+        pendingReviewId = id;
+        document.getElementById('passwordActionDescription').textContent = 'Removing this review is permanent. Please enter your password to confirm.';
+        document.getElementById('managerPassword').value = '';
+        const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+        passwordModal.show();
     });
+});
+
+// Confirm button inside modal
+document.getElementById('confirmPasswordBtn').addEventListener('click', async function() {
+    const pwdInput = document.getElementById('managerPassword');
+    const password = pwdInput.value;
+    if (!password) {
+        showError('Please enter your password');
+        return;
+    }
+
+    if (!pendingAction || !pendingReviewId) {
+        showError('Invalid action');
+        return;
+    }
+
+    try {
+        const url = pendingAction === 'unflag' ? `/manager/review/${pendingReviewId}/unflag` : `/manager/review/${pendingReviewId}/remove`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showSuccess(data.message || (pendingAction === 'unflag' ? 'Review kept' : 'Review removed'));
+            const passwordModal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+            if (passwordModal) passwordModal.hide();
+            setTimeout(() => location.reload(), 900);
+        } else {
+            // Keep modal open and show generic error
+            showError('Unable to complete this action. Please check your password and try again.');
+            console.error('Backend error:', data && data.message);
+            pwdInput.value = '';
+        }
+    } catch (err) {
+        console.error('Error performing action', err);
+        showError('Unexpected error. Please try again.');
+        pwdInput.value = '';
+    }
 });
 </script>
 
