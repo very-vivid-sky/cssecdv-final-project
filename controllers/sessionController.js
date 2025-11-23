@@ -65,7 +65,7 @@ const sessionController = {
                 return resp.render('login', {
                     layout: 'index',
                     title: 'Result page',
-                    message: 'Your account has been disabled. Please contact an administrator.'
+                    message: 'Invalid username and/or password'
                 });
             }
 
