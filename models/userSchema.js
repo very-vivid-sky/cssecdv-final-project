@@ -27,6 +27,11 @@ const userSchema = mongoose.Schema(
             type: [String]
         },
         
+        passwordLastChanged: {
+            type: Date,
+            default: Date.now
+        },
+
         userDetails:{
             type:String
         },

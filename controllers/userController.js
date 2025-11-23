@@ -203,6 +203,7 @@ const userController = {
 
       const salt = await bcrypt.genSalt(saltRounds);
       user.password = await bcrypt.hash(body.password_new, salt);
+      user.passwordLastChanged = new Date();
       updated = true;
     }
 

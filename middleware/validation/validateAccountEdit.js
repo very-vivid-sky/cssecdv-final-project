@@ -87,6 +87,15 @@ module.exports = async function validateAccountEdit(req, res, next) {
                 return res.render("edit-user", renderObject);
             }
 
+            const ONE_DAY = 24 * 60 * 60 * 1000;
+            const now = Date.now();
+
+            if (user.passwordLastChanged && (now - user.passwordLastChanged.getTime()) < ONE_DAY) {
+                const hoursLeft = Math.ceil((ONE_DAY - (now - user.passwordLastChanged.getTime())) / (60 * 60 * 1000))
+                renderObject.message_warning = `You must wait ${hoursLeft} more hour(s) before changing your password again.`;
+                return res.render("edit-user", renderObject);
+            }
+
             const reused = await authMiddleware.checkForPasswordReuse(user, password_new);
             if (reused) {
                 renderObject.message_warning = "You cannot reuse your previous passwords.";
