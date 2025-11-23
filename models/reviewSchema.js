@@ -44,6 +44,26 @@ const reviewSchema =  mongoose.Schema(
             body: {type: String, default: null}
         }
 
+        ,
+        // Flagging for manager review
+        flagged: {
+            type: Boolean,
+            default: false
+        },
+        flaggedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'user',
+            default: null
+        },
+        flaggedAt: {
+            type: Date,
+            default: null
+        },
+        flagReason: {
+            type: String,
+            default: null
+        }
+
     },
     
     {

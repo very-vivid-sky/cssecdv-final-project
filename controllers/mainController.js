@@ -19,7 +19,8 @@ const mainController = {
       layout: "index",
       clientType: helper.getClientType(req)
     })
-  }
+  },
+
 }
 
 module.exports = mainController;

@@ -40,8 +40,27 @@ const userSchema = mongoose.Schema(
         clientType :{
             type: String, 
             default: "guest"
-        }
+        },
 
+        isActive: {
+            type: Boolean,
+            default: true
+        },
+        
+        failedLoginAttempts: {
+            type: Number,
+            default: 0
+        },
+        
+        lockedUntil: {
+            type: Date,
+            default: null
+        },
+        
+        lastFailedLoginAttempt: {
+            type: Date,
+            default: null
+        }
     },
     
     {

@@ -13,6 +13,12 @@
 				{{#if actionBtn}}
 					<button class="btn btn-login btn-text btn-sm" id="{{actionBtn.id}}-{{id}}" data-bs-toggle="modal" data-bs-target="#modal">{{actionBtn.text}}</button>
 				{{/if}}
+				{{#if flagged}}
+					<span class="badge bg-warning text-dark ms-2">Flagged for review</span>
+				{{/if}}
+				{{#if canFlag}}
+					<button class="btn btn-outline-secondary btn-sm ms-2 flagBtn" data-review-id="{{id}}">Flag</button>
+				{{/if}}
 			</div>
 			<div class="d-flex gap-1 align-items-center">
 				{{#renderStars rating}}{{/renderStars}}
@@ -58,3 +64,34 @@
 	</div>
 </div>
 {{/each}}
+
+<script>
+// Attach flag button handlers
+document.querySelectorAll('.flagBtn').forEach(btn => {
+	btn.addEventListener('click', async function() {
+		const reviewId = this.dataset.reviewId;
+		const reason = prompt('Optional: enter a reason for flagging this review (or leave blank)');
+		// If user cancelled the prompt, reason will be null
+		if (reason === null) {
+			return; // User cancelled, don't flag
+		}
+		try {
+			const res = await fetch(`/review/${reviewId}/flag`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ reason })
+			});
+			const data = await res.json();
+			if (res.ok) {
+				alert(data.message || 'Review flagged');
+				window.location.reload();
+			} else {
+				alert(data.message || 'Failed to flag review');
+			}
+		} catch (err) {
+			console.error(err);
+			alert('Error flagging review');
+		}
+	});
+});
+</script>
