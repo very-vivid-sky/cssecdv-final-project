@@ -6,45 +6,126 @@ const User = require('../models/userSchema.js');
 const Review = require('../models/reviewSchema.js');
 const auditLogger = require('../middleware/auditLogger.js');
 const bcrypt = require('bcryptjs');
-var userId = "65f05288fe85e01b514bbdab";
 
 const reviewController = {
-    createReview_post: async (req, resp) => {
-        try {
-            // validate access first
-            helper.validateAccess("user", req, function (isValid, user) {
-                if (!isValid) {
-                    // deny request; audit and respond
-                    try { auditLogger.logAccessDenied(req.session && req.session.userId ? req.session.userId : 'ANONYMOUS', 'Review', null, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'NOT_LOGGED_IN'); } catch(e) { console.error('Audit error', e); }
-                    return resp.status(403).send({ message: "Cannot write a review as an unregistered user" });
-                } else {
-                    let resId = req.params.id
-                    helper.getRestaurant(resId, function(resto) {
-                        // if user is a manager here
-                        if (resto.estOwner == user._id) {
-                            // deny request; audit and respond
-                            try { auditLogger.logAccessDenied(req.session && req.session.userId ? req.session.userId : 'ANONYMOUS', 'Review', resId, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'MANAGER_CANNOT_REVIEW_OWN'); } catch(e) { console.error('Audit error', e); }
-                            return resp.status(403).send({ message: "Cannot write a review as the manager of this establishment" });
-                        }
+    
+   createReview_post: async (req, resp) => {
+    try {
+        helper.validateAccess("user", req, async (isValid, user) => {
 
-                        // write and publish review
+            if (!isValid) {
+                return resp.status(403).send({
+                    message_warning: "Cannot write a review as an unregistered user"
+                });
+            }
 
-                        let review = new Review({
-                            userAcc: user._id,
-                            reviewBody: req.body.review,
-                            restaurantAcc: resto._id,
-                            rating: req.body.rating,
-                            images: [],
-                        })
-                        review.save();
-                        resp.redirect(req.get("Referrer") || "/");
-                    })
-                }
-            })
-        } catch(error) {
-            return resp.status(500).send({ message: error.message });
-        }
+            const resId = req.params.id;
+            const resto = await Restaurant.findById(resId);
 
+            if (!resto) {
+                return resp.status(404).render("error", {
+                    layout: "index",
+                    title: "Not Found",
+                    message_warning: "Restaurant not found",
+                    clientType: helper.getClientType(req)
+                });
+            }
+
+            // Manager cannot review own restaurant
+            if (resto.estOwner.toString() === user._id.toString()) {
+                return resp.status(403).render("restaurant", {
+                    layout: "index",
+                    title: resto.name,
+                    message_warning: "Managers cannot review their own restaurant",
+                    restaurant: resto,
+                    clientType: helper.getClientType(req)
+                });
+            }
+
+            if (req.validationError) {
+
+    // Load raw reviews
+    const rawReviews = await Review.find({ restaurantAcc: resId })
+        .populate("userAcc")
+        .exec();
+
+    // Format reviews the same way your page normally does
+    const formattedReviews = reviewController.getSortedReviews(
+        "helpful-first",
+        rawReviews,
+        req.session.userId,
+        resto.estOwner,
+        req.session.role
+    );
+
+    // Compute average rating safely
+    const ave =
+        rawReviews.length === 0
+            ? 0
+            : (
+                rawReviews.reduce((sum, r) => sum + r.rating, 0) /
+                rawReviews.length
+            ).toFixed(1);
+
+    return resp.status(400).render("restaurant", {
+        layout: 'index',
+        title: resto.name,
+        name: resto.name,
+
+        // restaurant info
+        address: resto.address,
+        number: resto.number,
+        openingTime: helper.formatTime(resto.openingTime.h, resto.openingTime.m),
+        closingTime: helper.formatTime(resto.closingTime.h, resto.closingTime.m),
+        images: resto.images,
+
+        // session
+        clientType: helper.getClientType(req),
+        restaurantAcc: resId,
+        userAcc: req.session.userId,
+
+        // Correct reviews
+        reviews: formattedReviews,
+
+        // computed average
+        rating: ave,
+
+        // error message
+        message_warning: req.validationError
+    });
+}
+
+
+            // Images
+            const uploadedImages = (req.files || []).map(f => ({
+                filename: f.filename,
+                path: "/uploads/" + f.filename,
+                mimetype: f.mimetype
+            }));
+
+            // Save Review
+            const review = new Review({
+                userAcc: user._id,
+                restaurantAcc: resto._id,
+                rating: req.body.rating,
+                reviewBody: req.body.review,
+                images: uploadedImages
+            });
+
+            await review.save();
+
+            return resp.redirect(req.get("Referrer") || "/");
+        });
+
+    } catch (error) {
+        console.error("Create Review Error:", error);
+        return resp.status(500).render("error", {
+            layout: "index",
+            message: error.message,
+            clientType: helper.getClientType(req)
+        });
+    }
+},
 
         /*
             //images uploaded by the user
@@ -71,7 +152,6 @@ const reviewController = {
             }
         */
        
-    },
 
     sortReviews: function(req, resp) {
         let sortBy = req.params.sort;

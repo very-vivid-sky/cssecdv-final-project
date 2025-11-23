@@ -8,9 +8,12 @@ var storate = multer.diskStorage({
     destination: function(req, file, cb) {
         cb(null, 'public/uploads/');
     },
-    filename: function(req, file, cb) {
+     filename: function (req, file, cb) {
         let ext = path.extname(file.originalname);
-        cb(null, Date.now() + ext);
+        let userId = req.session?.userId || "guest";
+        let timestamp = Date.now();
+
+        cb(null, `user_${userId}_${timestamp}${ext}`);
     }
 });
 

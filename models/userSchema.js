@@ -33,7 +33,7 @@ const userSchema = mongoose.Schema(
 
         userPicture:{
             type:String,
-            default: null
+            default: "default.png"
         },
 
         totalReviews :{

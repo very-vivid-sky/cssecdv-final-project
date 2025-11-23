@@ -175,37 +175,41 @@ const userController = {
     });
   },
 
+
 // Edits the details of a user via their /userdetails page
 editUser_post: async (req, resp) => {
   helper.validateAccess("user", req, async function(isValid, user) {
     if (!isValid) return helper.get403Page(req, resp);
 
     const body = req.body;
+    const action = body.action;
 
-    const renderObject = {
-      layout: 'index',
-      title: "Profile",
-      clientType: helper.getClientType(req),
-      userName: user.userName,
-      joined: user.createdAt.toDateString(),
-      totalReviews: user.totalReviews,
-      bio: user.userDetails,
-      image: user.userPicture,
-      userId: user._id,
-    };
+    if (body.username) user.userName = body.username;
+    if (body.bio) user.userDetails = body.bio;
+    if (req.file) user.userPicture = req.file.filename;
 
-    const wantsPasswordChange = !!body.password_new;
-    const wantsUsernameChange = !!body.username;
-    const wantsBioChange = !!body.bio;
+    let updated = false;
 
-    if (wantsPasswordChange || wantsUsernameChange) {
-
-      // must enter current password
-      if (!body.password_old) {
-        renderObject.message_warning = "You need to enter your current password to proceed.";
-        return resp.render('edit-user', renderObject);
+    if (action === "change_username") {
+      const correct = await bcrypt.compare(body.password_old, user.password);
+      if (!correct) {
+        return resp.render("edit-user", {
+          layout: "index",
+            title: "Profile",
+            userName: user.userName,
+            joined: user.createdAt.toDateString(),
+            totalReviews: user.totalReviews,
+            bio: user.userDetails,
+            image: user.userPicture,
+            userId: user._id,
+            clientType: helper.getClientType(req),
+          message_warning: "Current password is incorrect."
+        });
       }
 
+      user.userName = body.username;
+      updated = true;
+    }
       // password policy check
       if (wantsPasswordChange) {
         if (!authMiddleware.validatePassword(body.password_new)) {
@@ -213,13 +217,26 @@ editUser_post: async (req, resp) => {
           return resp.render('edit-user', renderObject);
         }
 
-        // retype check
-        if (!body.password_retype || body.password_new !== body.password_retype) {
-          renderObject.message_warning = "Passwords do not match. Please retype.";
-          return resp.render('edit-user', renderObject);
-        }
+     if (action === "change_password") {
+      const correct = await bcrypt.compare(body.password_old, user.password);
+      if (!correct) {
+        return resp.render("edit-user", {
+          layout: "index",
+            title: "Profile",
+            userName: user.userName,
+            joined: user.createdAt.toDateString(),
+            totalReviews: user.totalReviews,
+            bio: user.userDetails,
+            image: user.userPicture,
+            userId: user._id,
+            clientType: helper.getClientType(req),
+          message_warning: "Current password is incorrect."
+        });
       }
 
+      const salt = await bcrypt.genSalt(saltRounds);
+      user.password = await bcrypt.hash(body.password_new, salt);
+      updated = true;
       // verify the username is usable
       if (wantsUsernameChange) {
         let userWithThisName = await helper.getUserFromData("userName", body.username);
@@ -295,44 +312,29 @@ editUser_post: async (req, resp) => {
       return resp.render('edit-user', renderObject);
     }
 
+     if (action === undefined) {
+      if (req.file) user.userPicture = req.file.filename;
+      if (body.bio) user.userDetails = body.bio;
+      updated = true;
+    }
+
+     if (updated) await user.save();
+
+
+    return resp.render("edit-user", {
+      layout: "index",
+      title: "Profile",
+      userName: user.userName,
+      joined: user.createdAt.toDateString(),
+      totalReviews: user.totalReviews,
+      bio: user.userDetails,
+      image: user.userPicture,
+      userId: user._id,
+      clientType: helper.getClientType(req),
+      message_success: "Profile updated successfully!"
+    });
   });
 },
-
-  login_get: async (req, resp) => {
-    if (helper.isLoggedIn(req)) {
-      helper.get403Page(req, resp);
-      return;
-    }
-    try {
-      return resp.render('login', {
-        layout: 'index',
-        title: "Login",
-      });
-    } catch (error) {
-      console.log(error);
-      resp.status(500).send({ message: error.message });
-    }
-  },
-
-
-  editUser_get: async (req, resp) => {
-    helper.validateAccess("user", req, (isValid, user) => {
-      if (!isValid) {
-        return helper.get403Page(req, resp);
-      }
-      return resp.status(200).render('edit-user', {
-        layout: 'index',
-        title: "Profile",
-        userName: user.userName,
-        joined: user.createdAt.toDateString(),
-        totalReviews: user.totalReviews,
-        bio: user.userDetails,
-        image: user.userPicture,
-        userId: user._id,
-        clientType: helper.getClientType(req),
-      });
-    });
-  },
 
   clientDetails_get: async (req, resp) => {
     const { id } = req.params;

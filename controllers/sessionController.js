@@ -48,7 +48,7 @@ const sessionController = {
 
                 return resp.render('login', {
                     layout: 'index',
-                    title: 'Result page',
+                    title: 'Login',
                     message: 'Invalid username and/or password'
                 });
             }
@@ -56,7 +56,7 @@ const sessionController = {
             if (user.isActive === false) {
                 return resp.render('login', {
                     layout: 'index',
-                    title: 'Result page',
+                    title: 'Login',
                     message: 'Invalid username and/or password'
                 });
             }
@@ -74,7 +74,7 @@ const sessionController = {
 
                 return resp.render('login', {
                     layout: 'index',
-                    title: 'Result page',
+                    title: 'Login',
                     message: `Account temporarily locked. Try again in ${minutesRemaining} minute(s).`
                 });
             }
@@ -96,7 +96,7 @@ const sessionController = {
 
                 return resp.render('login', {
                     layout: 'index',
-                    title: 'Result page',
+                    title: 'Login',
                     message: 'Invalid username and/or password'
                 });
             }
