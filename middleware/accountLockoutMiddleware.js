@@ -1,6 +1,7 @@
 const User = require('../models/userSchema.js');
 const { logAccountLockout } = require('./auditLogger');
 
+
 // Middleware to check if user account is locked due to failed login attempts
 // Prevents login if account is currently locked
 
