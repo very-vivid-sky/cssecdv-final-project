@@ -50,7 +50,8 @@ const userController = {
                         resp.render("register", {
                             layout: 'index',
                             title: "Register",
-                            message: "Account registered to email, please log in"
+                            // message: "Account registered to email, please log in"
+                            message: "Unable to complete registration. Please try again."
                         });
                     }
                 })
@@ -60,7 +61,8 @@ const userController = {
                 return resp.render('register', {
                     layout: 'index',
                     title: "Register",
-                    message: "Please re-enter your password"
+                    // message: "Please re-enter your password"
+                    message: "Registration failed. Please verify your input and try again."
                 });
             }
         } else {
@@ -68,7 +70,8 @@ const userController = {
             return resp.render('register', {
                 layout: 'index',
                 title: "Register",
-                message: "Passwords are required to be at least 8 characters long"
+                // message: "Passwords are required to be at least 8 characters long"
+                message: "Registration failed. Please verify your input and try again."
             });
         }
     },

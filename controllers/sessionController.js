@@ -24,7 +24,8 @@ const sessionController = {
                         resp.render('login', {
                             layout: 'index',
                             title: 'Result page',
-                            message: 'Email and password do not match!'
+                            // message: 'Email and password do not match!'
+                            message: 'Invalid username and/or password'
                         });
                     }
                 })
@@ -33,7 +34,8 @@ const sessionController = {
                 resp.render('login', {
                     layout: 'index',
                     title: 'Result page',
-                    message: 'Email and password do not match!'
+                    //  message: 'Email and password do not match!'
+                    message: 'Invalid username and/or password'
                 });
             }
         })
