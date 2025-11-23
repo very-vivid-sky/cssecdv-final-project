@@ -1,7 +1,6 @@
 const express = require('express');
 const upload = require('../public/imageHandler');
 
-
 //controllers
 const restaurantController = require('../controllers/restaurantController.js')
 const userController = require('../controllers/userController.js');
@@ -13,6 +12,11 @@ const { isAdmin, isAccountActive, isManager, isStrictManager, isLoggedIn } = req
 const helper = require("../controllers/controllerHelper.js")
 const { checkAccountLockout } = require('../middleware/accountLockoutMiddleware.js');
 const validateRegister = require('../middleware/validation/validateRegister.js');
+const validateLogin = require('../middleware/validation/validateLogin.js');
+const validateAccountEdit = require('../middleware/validation/validateAccountEdit.js');
+const validateReview = require('../middleware/validation/validateReview.js');
+
+const User = require('../models/userSchema.js');
 
 const app = express();
 
@@ -31,10 +35,32 @@ function route_search(req, resp) { // routes everything going through /search
 	else { return restaurantController.getSearchPage(req, resp); }
 } 
 
+// Attach user object to req for edit validation
+function loadUserForEdit(req, res, next) {
+    if (!req.session.userId) return next();
+
+    User.findById(req.session.userId)
+        .then(user => {
+            req.userData = user;   // <-- validateAccountEdit needs this
+            next();
+        })
+        .catch(err => {
+            console.error("loadUserForEdit error:", err);
+            next();
+        });
+}
+
 app.get('/restaurants',restaurantController.getAll);
 app.get('/restaurant/:id',restaurantController.getById);
 app.get('/restaurant/:id/:sort',restaurantController.getById);
-app.post('/restaurant/:id', isLoggedIn, upload.array("images[]"), reviewController.createReview_post);
+//app.post('/restaurant/:id', isLoggedIn, upload.array("images[]"), reviewController.createReview_post);
+app.post(
+    '/restaurant/:id',
+    isLoggedIn,
+    upload.array("images[]"),
+    validateReview,
+    reviewController.createReview_post
+);
 // flag a review (managers)
 app.post('/review/:id/flag', isManager, reviewController.flagReview);
 app.get("/search", route_search);
@@ -50,10 +76,17 @@ app.post('/register',
 );
 app.get('/login',userController.login_get);
 // app.post('/login',sessionController.login);
-app.post('/login', checkAccountLockout, sessionController.login);
+app.post('/login', validateLogin, checkAccountLockout, sessionController.login);
 app.get('/user/:id', userController.clientDetails_get);
 app.get('/userdetails/', isLoggedIn, userController.editUser_get);
-app.post("/userdetails/", isLoggedIn, userController.editUser_post);
+app.post(
+    "/userdetails",
+    isLoggedIn,
+    upload.single("avatar"),     
+    loadUserForEdit,             
+    validateAccountEdit,         
+    userController.editUser_post 
+);
 app.get('/logout', isLoggedIn, sessionController.logout);
 
 // admin routes (protected by isAdmin middleware)

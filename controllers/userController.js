@@ -146,250 +146,85 @@ const userController = {
   },
 
 
-editUser_post: async (req, resp) => {
-  helper.validateAccess("user", req, (isValid, user) => {
+ editUser_post: async (req, resp) => {
+  helper.validateAccess("user", req, async (isValid, user) => {
     if (!isValid) return helper.get403Page(req, resp);
 
     const body = req.body;
+    const action = body.action;
 
-    const renderObject = {
-      layout: 'index',
+    if (body.username) user.userName = body.username;
+    if (body.bio) user.userDetails = body.bio;
+    if (req.file) user.userPicture = req.file.filename;
+
+    let updated = false;
+
+    if (action === "change_username") {
+      const correct = await bcrypt.compare(body.password_old, user.password);
+      if (!correct) {
+        return resp.render("edit-user", {
+          layout: "index",
+            title: "Profile",
+            userName: user.userName,
+            joined: user.createdAt.toDateString(),
+            totalReviews: user.totalReviews,
+            bio: user.userDetails,
+            image: user.userPicture,
+            userId: user._id,
+            clientType: helper.getClientType(req),
+          message_warning: "Current password is incorrect."
+        });
+      }
+
+      user.userName = body.username;
+      updated = true;
+    }
+
+     if (action === "change_password") {
+      const correct = await bcrypt.compare(body.password_old, user.password);
+      if (!correct) {
+        return resp.render("edit-user", {
+          layout: "index",
+            title: "Profile",
+            userName: user.userName,
+            joined: user.createdAt.toDateString(),
+            totalReviews: user.totalReviews,
+            bio: user.userDetails,
+            image: user.userPicture,
+            userId: user._id,
+            clientType: helper.getClientType(req),
+          message_warning: "Current password is incorrect."
+        });
+      }
+
+      const salt = await bcrypt.genSalt(saltRounds);
+      user.password = await bcrypt.hash(body.password_new, salt);
+      updated = true;
+    }
+
+     if (action === undefined) {
+      if (req.file) user.userPicture = req.file.filename;
+      if (body.bio) user.userDetails = body.bio;
+      updated = true;
+    }
+
+     if (updated) await user.save();
+
+
+    return resp.render("edit-user", {
+      layout: "index",
       title: "Profile",
-      clientType: helper.getClientType(req),
       userName: user.userName,
       joined: user.createdAt.toDateString(),
       totalReviews: user.totalReviews,
       bio: user.userDetails,
       image: user.userPicture,
       userId: user._id,
-    };
-
-    const wantsPasswordChange = !!body.password_new;
-    const wantsUsernameChange = !!body.username;
-    const wantsBioChange = !!body.bio;
-
-    if (wantsPasswordChange || wantsUsernameChange) {
-
-      // must enter current password
-      if (!body.password_old) {
-        renderObject.message_warning = "You need to enter your current password to proceed.";
-        return resp.render('edit-user', renderObject);
-      }
-
-      // password policy check
-      if (wantsPasswordChange) {
-        if (!validatePassword(body.password_new)) {
-          renderObject.message_warning = validatePassword_errorMsg;
-          return resp.render('edit-user', renderObject);
-        }
-
-        // retype check
-        if (!body.password_retype || body.password_new !== body.password_retype) {
-          renderObject.message_warning = "Passwords do not match. Please retype.";
-          return resp.render('edit-user', renderObject);
-        }
-      }
-
-      // verify old password
-      helper.verifyPasswordIsCorrect(user.userEmail, body.password_old, (ok) => {
-        if (!ok) {
-          renderObject.message_warning = "Current password is incorrect.";
-          return resp.render('edit-user', renderObject);
-        }
-
-        // finish helper
-        const finish = () => {
-          user.save().then(() => {
-            if (wantsPasswordChange && wantsUsernameChange) {
-              renderObject.message_success = "Successfully updated your password and username!";
-            } else if (wantsPasswordChange) {
-              renderObject.message_success = "Password successfully updated!";
-            } else if (wantsUsernameChange) {
-              renderObject.message_success = "Username successfully updated!";
-            } else if (wantsBioChange) {
-              renderObject.message_success = "Profile details updated!";
-            }
-            return resp.render('edit-user', renderObject);
-          });
-        };
-
-        // hash password if needed
-        if (wantsPasswordChange) {
-          bcrypt.genSalt(saltRounds, (err, salt) => {
-            if (err) {
-              renderObject.message_warning = "Something went wrong. Please try again.";
-              return resp.render('edit-user', renderObject);
-            }
-            bcrypt.hash(body.password_new, salt, (err2, hashedPass) => {
-              if (err2) {
-                renderObject.message_warning = "Something went wrong. Please try again.";
-                return resp.render('edit-user', renderObject);
-              }
-
-              user.password = hashedPass;
-              if (wantsUsernameChange) user.userName = body.username;
-              if (wantsBioChange) user.userDetails = body.bio;
-              finish();
-            });
-          });
-
-        } else {
-          // username or bio only
-          if (wantsUsernameChange) user.userName = body.username;
-          if (wantsBioChange) user.userDetails = body.bio;
-          finish();
-        }
-      });
-
-    } 
-    else if (wantsBioChange) {
-      user.userDetails = body.bio;
-      user.save().then(() => {
-        renderObject.message_success = "Profile details updated!";
-        return resp.render('edit-user', renderObject);
-      });
-    } 
-    else {
-      return resp.render('edit-user', renderObject);
-    }
-
+      clientType: helper.getClientType(req),
+      message_success: "Profile updated successfully!"
+    });
   });
 },
-
-  login_get: async (req, resp) => {
-    if (helper.isLoggedIn(req)) {
-      helper.get403Page(req, resp);
-      return;
-    }
-    try {
-      return resp.render('login', {
-        layout: 'index',
-        title: "Login",
-      });
-    } catch (error) {
-      console.log(error);
-      resp.status(500).send({ message: error.message });
-    }
-  },
-
-
-  editUser_get: async (req, resp) => {
-    helper.validateAccess("user", req, (isValid, user) => {
-      if (!isValid) {
-        return helper.get403Page(req, resp);
-      }
-      return resp.status(200).render('edit-user', {
-        layout: 'index',
-        title: "Profile",
-        userName: user.userName,
-        joined: user.createdAt.toDateString(),
-        totalReviews: user.totalReviews,
-        bio: user.userDetails,
-        image: user.userPicture,
-        userId: user._id,
-        clientType: helper.getClientType(req),
-      });
-    });
-  },
-
-
-  editUser_post: async (req, resp) => {
-    helper.validateAccess("user", req, (isValid, user) => {
-      if (!isValid) return helper.get403Page(req, resp);
-
-      const body = req.body;
-      const renderObject = {
-        layout: 'index',
-        title: "Profile",
-        clientType: helper.getClientType(req),
-        userName: user.userName,
-        joined: user.createdAt.toDateString(),
-        totalReviews: user.totalReviews,
-        bio: user.userDetails,
-        image: user.userPicture,
-        userId: user._id,
-      };
-
-      const wantsPasswordChange = !!body.password_new;
-      const wantsUsernameChange = !!body.username;
-      const wantsBioChange = !!body.bio;
-
-
-      if (wantsPasswordChange || wantsUsernameChange) {
-        if (!body.password_old) {
-          renderObject.message_warning = "You need to use your current password to change it or your username.";
-          return resp.render('edit-user', renderObject);
-        }
-        if (wantsPasswordChange) {
-          if (!validatePassword(body.password_new)) {
-            renderObject.message_warning = validatePassword_errorMsg;
-            return resp.render('edit-user', renderObject);
-          }
-          if (!body.password_retype || body.password_new !== body.password_retype) {
-            renderObject.message_warning = "Passwords are not the same. Please retype them.";
-            return resp.render('edit-user', renderObject);
-          }
-        }
-
-        helper.verifyPasswordIsCorrect(user.userEmail, body.password_old, (ok) => {
-          if (!ok) {
-            renderObject.message_warning = "Current password is incorrect.";
-            return resp.render('edit-user', renderObject);
-          }
-
-          const finish = () => {
-            user.save().then(() => {
-              if (wantsPasswordChange && wantsUsernameChange) {
-                renderObject.message_success = "Successfully changed your password and username!";
-              } else if (wantsPasswordChange) {
-                renderObject.message_success = "Successfully changed your password!";
-              } else if (wantsUsernameChange) {
-                renderObject.message_success = "Successfully changed your username!";
-              } else if (wantsBioChange) {
-                renderObject.message_success = "Successfully edited your public profile details!";
-              }
-              return resp.render('edit-user', renderObject);
-            });
-          };
-
-          if (wantsPasswordChange) {
-            bcrypt.genSalt(saltRounds, (err, salt) => {
-              if (err) {
-                renderObject.message_warning = "Something went wrong. Please try again.";
-                return resp.render('edit-user', renderObject);
-              }
-              bcrypt.hash(body.password_new, salt, (err2, hashedPass) => {
-                if (err2) {
-                  renderObject.message_warning = "Something went wrong. Please try again.";
-                  return resp.render('edit-user', renderObject);
-                }
-                user.password = hashedPass;
-                if (wantsUsernameChange) user.userName = body.username;
-                if (wantsBioChange) user.userDetails = body.bio;
-                finish();
-              });
-            });
-          } else {
-            if (wantsUsernameChange) user.userName = body.username;
-            if (wantsBioChange) user.userDetails = body.bio;
-            finish();
-          }
-        });
-      } else {
-        // Only bio edited or nothing
-        if (wantsBioChange) {
-          user.userDetails = body.bio;
-          user.save().then(() => {
-            renderObject.message_success = "Successfully edited your public profile details!";
-            return resp.render('edit-user', renderObject);
-          });
-        } else {
-          return resp.render('edit-user', renderObject);
-        }
-      }
-    });
-  },
-
 
   clientDetails_get: async (req, resp) => {
     const { id } = req.params;

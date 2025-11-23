@@ -11,6 +11,18 @@
     {{> guestheader}}
 {{/if}}
 
+{{#if message_warning}}
+<div class="alert alert-danger mt-3 text-center">
+    <strong>{{message_warning}}</strong>
+</div>
+{{/if}}
+
+{{#if message_success}}
+<div class="alert alert-success mt-3 text-center">
+    {{message_success}}
+</div>
+{{/if}}
+
 <script src="/pages/restaurant.js"></script>
 
 <div class="container d-flex flex-column min-vh-100">
@@ -66,7 +78,6 @@
 							<div class="modal-header">Review
 								<button class="btn-close" data-bs-dismiss="modal" data-bs-target="modal"></button>
 							</div>
-
 							<form class="form-group" id="reviewForm" action='/restaurant/{{restaurantAcc}}' method="POST" enctype="multipart/form-data">
 								<div class="modal-body d-flex flex-column gap-2">
 									<!--
@@ -80,13 +91,18 @@
 									<input type="hidden" id="restaurantAcc" value="{{restaurantId}}"></input>
 									<input type="hidden" id="userAcc" value="{{userAcc}}"></input>
 									-->
-									<div class="d-flex gap-3">
+									<div class="d-flex gap-3 align-items-center">
 										<label class="form-label m-0" for="modal-rating">Rating</label>
-										<input type="range" class="form-range" id="modal-rating" name="rating" min=1 max=5 step=1/>
+
+										<input type="range" class="form-range" id="modal-rating" 
+											name="rating" min="1" max="5" step="1" />
+
+										<span id="rating-display" class="fw-bold">3</span>  <!-- default shown -->
 									</div>
+
 									<div>
 										<label class="form-label m-0" for="reviewBody">Review:</label>
-										<textarea class="form-control" name="review" id="reviewBody"></textarea>
+										<textarea class="form-control" name="review" id="reviewBody" maxlength="500"></textarea>
 									</div>
 									<div>
 										<label class="form-label mb-0 mt-1" for="create-review-img">Upload
@@ -133,6 +149,19 @@
 </div>
 
 <script>
+    const slider = document.getElementById("modal-rating");
+    const display = document.getElementById("rating-display");
+
+    // Show default rating
+    display.textContent = slider.value;
+
+    // Update number when slider moves
+    slider.addEventListener("input", function () {
+        display.textContent = this.value;
+    });
+
+ 
+	
 // Validate selected images for review upload (restaurant page)
 const restaurantImgInput = document.getElementById('create-review-img');
 if (restaurantImgInput) {
