@@ -67,7 +67,7 @@
 								<button class="btn-close" data-bs-dismiss="modal" data-bs-target="modal"></button>
 							</div>
 
-							<form class="form-group" id="reviewForm" action='/restaurant/{{restaurantAcc}}' method="POST">
+							<form class="form-group" id="reviewForm" action='/restaurant/{{restaurantAcc}}' method="POST" enctype="multipart/form-data">
 								<div class="modal-body d-flex flex-column gap-2">
 									<!--
 									<div class="d-flex gap-1 align-items-center">
@@ -91,7 +91,7 @@
 									<div>
 										<label class="form-label mb-0 mt-1" for="create-review-img">Upload
 											pictures</label>
-										<input type="file" class="form-control" id="create-review-img" />
+										<input type="file" class="form-control" id="create-review-img" name="images[]" accept="image/png,image/jpeg" multiple />
 									</div>
 								<div class="modal-footer">
 								<input type="submit" class="btn" id="reviewSubmit" value="Submit" />
@@ -131,3 +131,21 @@
 
 </section>
 </div>
+
+<script>
+// Validate selected images for review upload (restaurant page)
+const restaurantImgInput = document.getElementById('create-review-img');
+if (restaurantImgInput) {
+	restaurantImgInput.addEventListener('change', function() {
+		const allowed = ['image/png', 'image/jpeg'];
+		for (let i = 0; i < this.files.length; i++) {
+			const f = this.files[i];
+			if (!allowed.includes(f.type)) {
+				alert('Only JPEG and PNG images are allowed.');
+				this.value = '';
+				break;
+			}
+		}
+	});
+}
+</script>

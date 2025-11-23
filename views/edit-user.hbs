@@ -16,6 +16,13 @@
 
 <div class="d-flex flex-column min-vh-100 body-userdetails">
   <div class="container mt-5">
+    {{#if message_success}}
+    <div class="row alert alert-success" role="alert">{{message_success}}</div>
+    {{/if}}
+    {{#if message_warning}}
+    <div class="row alert alert-danger" role="alert"><strong>{{message_warning}}</strong></div>
+    {{/if}}
+
     <div class="row">
 
       <div class="col-4">
@@ -64,22 +71,19 @@
             </div>
 
             <div class="my-2 mx-3">
-              <form name="register-form" onsubmit="return checkForm()" method="get" class="form vstack login-form gap-1"
-                action="/newaccount" method=post
-                oninput='up2.setCustomValidity(up2.value != up.value ? "Passwords do not match." : "")'>
-                <input type="text" id="username" placeholder="Change Username" class="form-control" required>
-                <input type="password" id="password" placeholder="Old Password" class="form-control" required>
-                <input type="password" id="password" placeholder="New Password" class="form-control" required name=up>
-                <input type="password" id="retype-password" placeholder="Retype New Password" class="form-control"
-                  required name=up2>
+              <form name="edit-user-form" id="edit-user-form" method="POST" action="/userdetails" class="form vstack login-form gap-1">
+                <input type="text" id="username" name="username" placeholder="Change Username" class="form-control">
+                <input type="password" id="password_old" name="password_old" placeholder="Old Password" class="form-control">
+                <input type="password" id="password_new" name="password_new" placeholder="New Password" class="form-control">
+                <input type="password" id="password_retype" name="password_retype" placeholder="Retype New Password" class="form-control">
 
                 <div>
                   <label class="form-label mb-0 mt-1 mx-3" for="customFile">Change Avatar Picture:</label>
-                  <input type="file" class="form-control" id="customFile" />
+                  <input type="file" class="form-control" id="customFile" name="avatar" accept="image/png,image/jpeg" />
                 </div>
                 <div>
                   <label class="form-label mb-0 mt-1 mx-3" for="customFile">Change Description:</label>
-                  <input type="text" class="form-control" id="bio" placeholder="Enter Short Description">
+                  <input type="text" class="form-control" id="bio" name="bio" placeholder="Enter Short Description">
                 </div>
                 <a href='index-logged-in.html'>
                   <button id="" type="submit" class="btn btn-success">Update</button>
@@ -96,3 +100,18 @@
   </div>
 </div>
 
+<script>
+// client-side validation for edit-user avatar
+const customFileInput = document.getElementById('customFile');
+if (customFileInput) {
+  customFileInput.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const allowed = ['image/png', 'image/jpeg'];
+    if (!allowed.includes(file.type)) {
+      alert('Only JPEG and PNG images are allowed for avatars.');
+      this.value = '';
+    }
+  });
+}
+</script>
