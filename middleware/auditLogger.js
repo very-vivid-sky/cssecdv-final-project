@@ -148,6 +148,21 @@ const logValidationFailure = async (userId, resource, failureReason, ipAddress, 
   );
 };
 
+ // Log password change
+ 
+ const logPasswordChange = async (userId, ipAddress, userAgent) => {
+  await logAuditEvent(
+    'PASSWORD_CHANGE',
+    'success',
+    {
+      userId,
+      resource: "User",
+      ipAddress,
+      userAgent
+    }
+  );
+};
+
 /**
  * Get audit logs (admin only)
  */
@@ -193,6 +208,21 @@ const getAuditLogs = async (filters = {}) => {
   }
 };
 
+// gets the user from a req object
+const getUser = function(req) {
+  return req.session && req.session.userId ? req.session.userId : 'ANONYMOUS';
+}
+
+// gets the IP from a req object
+const getIp = function(req) {
+  return req.auditContext && req.auditContext.ipAddress ? req.auditContext.ipAddress : (req.ip || req.socket?.remoteAddress || null);
+}
+
+// gets the user-agent from a req object
+const getUa = function(req) {
+  return req.auditContext && req.auditContext.userAgent ? req.auditContext.userAgent : req.get && req.get('user-agent');
+}
+
 module.exports = {
   logAuditEvent,
   auditContextMiddleware,
@@ -201,5 +231,10 @@ module.exports = {
   logRegistration,
   logAccessDenied,
   logValidationFailure,
-  getAuditLogs
+  logPasswordChange,
+  getAuditLogs,
+
+  getUser,
+  getIp,
+  getUa,
 };
