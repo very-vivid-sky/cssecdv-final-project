@@ -1,6 +1,5 @@
 const userModel = require('../models/userSchema.js')
 const express = require('express');
-const User = require('../models/userSchema.js');
 const helper = require('./controllerHelper.js');
 const bcrypt = require('bcryptjs');
 const saltRounds = 5;
@@ -8,6 +7,13 @@ const lockoutMiddleware = require('../middleware/accountLockoutMiddleware.js');
 const auditLogger = require('../middleware/auditLogger.js');
 
 const sessionController = {
+    login: function(req, resp) {
+        // deny if logged in already
+        if (helper.isLoggedIn(req)) {
+            helper.get403Page(req, resp);
+            return;
+        }
+
     login: async function(req, resp) {
         try {
             // Promisify the callback to use async/await properly
@@ -168,6 +174,15 @@ const sessionController = {
         // check if logged in
         if (helper.getClientType(req)) {
             // destroy session, log out
+            req.session.destroy(function() {
+                resp.redirect("/");
+            })
+        } else {
+            // deny if logged out already
+            helper.get403Page(req, resp);
+            return;
+        }
+    },
             req.session.destroy(function () {
                 resp.redirect('/');
             });

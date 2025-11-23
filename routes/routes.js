@@ -8,6 +8,7 @@ const userController = require('../controllers/userController.js');
 const mainController = require('../controllers/mainController.js');
 const reviewController = require('../controllers/reviewController.js');
 const sessionController = require('../controllers/sessionController.js');
+const helper = require("../controllers/controllerHelper.js")
 const { checkAccountLockout } = require('../middleware/accountLockoutMiddleware.js');
 
 const app = express();
@@ -38,6 +39,7 @@ app.get('/login',userController.login_get);
 app.post('/login', checkAccountLockout, sessionController.login);
 app.get('/user/:id', userController.clientDetails_get);
 app.get('/userdetails/', userController.editUser_get);
+app.post("/userdetails/", userController.editUser_post);
 app.get('/logout',sessionController.logout);
 
 //review routes
@@ -52,4 +54,8 @@ app.get('/logout',userController.logOut_get);
 app.put('/restaurants/edit/:id',restaurantController.editRes);
 app.post('/create-restaurant',restaurantController.createRestaurant);
 */
+
+// 404 route
+app.all("*", helper.get404Page);
+
 module.exports = app;
