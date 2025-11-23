@@ -1,6 +1,7 @@
 const User = require('../models/userSchema.js');
 const helper = require('./controllerHelper.js');
 const bcrypt = require('bcryptjs');
+const authMiddleware = require("./authMiddleware.js");
 const lockoutMiddleware = require('../middleware/accountLockoutMiddleware.js');
 const auditLogger = require('../middleware/auditLogger.js');
 
@@ -12,15 +13,6 @@ const LOCK_MINUTES = 15;
 function findUserByEmail(email) {
     return new Promise((resolve) => {
         helper.getUserFromData("userEmail", email, (user) => resolve(user));
-    });
-}
-
-function comparePassword(plain, hash) {
-    return new Promise((resolve, reject) => {
-        bcrypt.compare(plain, hash, (err, same) => {
-            if (err) return reject(err);
-            resolve(same);
-        });
     });
 }
 
@@ -87,7 +79,7 @@ const sessionController = {
                 });
             }
 
-            const passwordOk = await comparePassword(password, user.password);
+            const passwordOk = await authMiddleware.comparePassword(password, user.password);
 
             if (!passwordOk) {
                 await lockoutMiddleware.recordFailedAttempt(email, req, MAX_ATTEMPTS, LOCK_MINUTES);

@@ -22,6 +22,10 @@ const userSchema = mongoose.Schema(
             minlength: 8,
             required: true
         },
+
+        oldPasswords: {
+            type: [String]
+        },
         
         userDetails:{
             type:String
