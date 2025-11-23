@@ -12,14 +12,16 @@ const reviewController = {
             // validate access first
             helper.validateAccess("user", req, function (isValid, user) {
                 if (!isValid) {
-                    // deny request;
+                    // deny request; audit and respond
+                    try { auditLogger.logAccessDenied(req.session && req.session.userId ? req.session.userId : 'ANONYMOUS', 'Review', null, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'NOT_LOGGED_IN'); } catch(e) { console.error('Audit error', e); }
                     return resp.status(403).send({ message: "Cannot write a review as an unregistered user" });
                 } else {
                     let resId = req.params.id
                     helper.getRestaurant(resId, function(resto) {
                         // if user is a manager here
                         if (resto.estOwner == user._id) {
-                            // deny request;
+                            // deny request; audit and respond
+                            try { auditLogger.logAccessDenied(req.session && req.session.userId ? req.session.userId : 'ANONYMOUS', 'Review', resId, req.auditContext?.ipAddress || req.ip, req.auditContext?.userAgent || req.get && req.get('user-agent'), 'MANAGER_CANNOT_REVIEW_OWN'); } catch(e) { console.error('Audit error', e); }
                             return resp.status(403).send({ message: "Cannot write a review as the manager of this establishment" });
                         }
 

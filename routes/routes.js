@@ -9,11 +9,15 @@ const mainController = require('../controllers/mainController.js');
 const reviewController = require('../controllers/reviewController.js');
 const sessionController = require('../controllers/sessionController.js');
 const adminController = require('../controllers/adminController.js');
-const { isAdmin, isAccountActive, isManager, isStrictManager } = require('../controllers/authMiddleware.js');
+const { isAdmin, isAccountActive, isManager, isStrictManager, isLoggedIn } = require('../controllers/authMiddleware.js');
 const helper = require("../controllers/controllerHelper.js")
 const { checkAccountLockout } = require('../middleware/accountLockoutMiddleware.js');
 
 const app = express();
+
+// Apply account active middleware to all routes defined in this router
+// This ensures disabled accounts are blocked before any route handler runs
+app.use(isAccountActive);
 
 //main controller
 app.get('/',mainController.getIndex);
@@ -29,7 +33,7 @@ function route_search(req, resp) { // routes everything going through /search
 app.get('/restaurants',restaurantController.getAll);
 app.get('/restaurant/:id',restaurantController.getById);
 app.get('/restaurant/:id/:sort',restaurantController.getById);
-app.post('/restaurant/:id', upload.array("images[]"), reviewController.createReview_post);
+app.post('/restaurant/:id', isLoggedIn, upload.array("images[]"), reviewController.createReview_post);
 // flag a review (managers)
 app.post('/review/:id/flag', isManager, reviewController.flagReview);
 app.get("/search", route_search);
@@ -42,13 +46,14 @@ app.get('/login',userController.login_get);
 // app.post('/login',sessionController.login);
 app.post('/login', checkAccountLockout, sessionController.login);
 app.get('/user/:id', userController.clientDetails_get);
-app.get('/userdetails/', userController.editUser_get);
-app.post("/userdetails/", userController.editUser_post);
-app.get('/logout',sessionController.logout);
+app.get('/userdetails/', isLoggedIn, userController.editUser_get);
+app.post("/userdetails/", isLoggedIn, userController.editUser_post);
+app.get('/logout', isLoggedIn, sessionController.logout);
 
 // admin routes (protected by isAdmin middleware)
 app.get('/admin/dashboard', isAdmin, adminController.getAdminDashboard);
 app.get('/api/admin/users', isAdmin, adminController.getAllUsers_get);
+app.post('/api/admin/verify-password', isAdmin, adminController.verifyAdminPassword);
 app.post('/api/admin/users/change-role', isAdmin, adminController.changeUserRole);
 app.post('/api/admin/users/toggle-status', isAdmin, adminController.toggleUserStatus);
 app.post('/api/admin/users/disable', isAdmin, adminController.disableUser);
@@ -59,8 +64,7 @@ app.get('/manager/flagged', isStrictManager, reviewController.getFlaggedReviews)
 app.post('/manager/review/:id/unflag', isStrictManager, reviewController.unflagReview);
 app.post('/manager/review/:id/remove', isStrictManager, reviewController.removeReview);
 
-// Apply account active middleware to all routes
-app.use(isAccountActive);
+// account active middleware is applied at the top of this file so it runs before route handlers
 
 //review routes
 

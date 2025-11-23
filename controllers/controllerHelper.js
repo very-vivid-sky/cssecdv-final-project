@@ -73,23 +73,23 @@ const helper = {
         }
     },
 
-	// Fetches the 403 page
-	get403Page: async function (req, resp) {
-		resp.status(403).render("error-403", {
-		  title: "Forbidden",
+	// Fetches the generic error page (doesn't leak status info)
+	getErrorPage: async function (req, resp, statusCode = 403) {
+		resp.status(statusCode).render("error", {
+		  title: "Error",
 		  layout: "index",
 		  clientType: helper.getClientType(req)
 		})
 	  },
 
-	  // Fetches the 404 page
-	  get404Page: async function (req, resp) {
-		resp.status(404).render("error-404", {
-		  title: "Page not found",
-		  layout: "index",
-		  clientType: helper.getClientType(req)
-		})
-	  },
+	// Backward compatibility aliases
+	get403Page: async function (req, resp) {
+		return helper.getErrorPage(req, resp, 403);
+	},
+
+	get404Page: async function (req, resp) {
+		return helper.getErrorPage(req, resp, 404);
+	},
 
 
 	// gets a user by searching for an entry in the Users db

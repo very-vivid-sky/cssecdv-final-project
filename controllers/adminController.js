@@ -1,6 +1,8 @@
 const express = require('express');
 const helper = require('./controllerHelper.js');
+const audit = require('../middleware/auditLogger.js');
 const User = require('../models/userSchema.js');
+const bcrypt = require('bcryptjs');
 
 const adminController = {
 
@@ -9,6 +11,7 @@ const adminController = {
         try {
             // Check if user is admin
             if (req.session.role !== "admin") {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'AdminDashboard', null, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'NOT_ADMIN');
                 return resp.status(403).send({ message: "Access denied. Admin only." });
             }
 
@@ -41,6 +44,7 @@ const adminController = {
     getAllUsers_get: async (req, resp) => {
         try {
             if (req.session.role !== "admin") {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'UserList', null, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'NOT_ADMIN');
                 return resp.status(403).json({ message: "Access denied. Admin only." });
             }
 
@@ -65,18 +69,71 @@ const adminController = {
         }
     },
 
+    // Verify admin password for sensitive operations
+    verifyAdminPassword: async (req, resp) => {
+        try {
+            if (req.session.role !== "admin") {
+                return resp.status(403).json({ success: false, message: "Access denied. Admin only." });
+            }
+
+            const { password } = req.body;
+
+            if (!password) {
+                return resp.status(400).json({ success: false, message: "Password is required." });
+            }
+
+            // Get the current admin user
+            const admin = await User.findById(req.session.userId).exec();
+            if (!admin) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'VerifyAdminPassword', null, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'ADMIN_NOT_FOUND');
+                return resp.status(404).json({ success: false, message: "Admin user not found." });
+            }
+
+            // Compare password
+            const isPasswordValid = await bcrypt.compare(password, admin.password);
+            if (!isPasswordValid) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'VerifyAdminPassword', null, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'INVALID_PASSWORD');
+                return resp.status(401).json({ success: false, message: "Invalid password." });
+            }
+
+            return resp.status(200).json({ success: true, message: "Password verified." });
+        } catch (error) {
+            console.error('Error verifying admin password:', error);
+            return resp.status(500).json({ success: false, message: error.message });
+        }
+    },
+
     // Change user role (admin or manager)
     changeUserRole: async (req, resp) => {
         try {
             // Check if requester is admin
             if (req.session.role !== "admin") {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'ChangeUserRole', req.body && req.body.userId ? req.body.userId : null, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'NOT_ADMIN');
                 return resp.status(403).json({ message: "Access denied. Admin only." });
             }
 
-            const { userId, newRole } = req.body;
+            const { userId, newRole, password } = req.body;
+
+            // Verify admin password for this sensitive operation
+            if (!password) {
+                return resp.status(400).json({ message: "Password required for this action." });
+            }
+
+            const admin = await User.findById(req.session.userId).exec();
+            if (!admin) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'ChangeUserRole', userId, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'ADMIN_NOT_FOUND');
+                return resp.status(404).json({ message: "Admin user not found." });
+            }
+
+            const isPasswordValid = await bcrypt.compare(password, admin.password);
+            if (!isPasswordValid) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'ChangeUserRole', userId, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'INVALID_ADMIN_PASSWORD');
+                return resp.status(401).json({ message: "Invalid admin password." });
+            }
 
             // Prevent admin from changing their own role
             if (userId === req.session.userId.toString()) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'ChangeUserRole', userId, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'SELF_CHANGE_ATTEMPT');
                 return resp.status(403).json({ message: "You cannot change your own role." });
             }
 
@@ -117,6 +174,7 @@ const adminController = {
         try {
             // Check if requester is admin
             if (req.session.role !== "admin") {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'ToggleUserStatus', req.body && req.body.userId ? req.body.userId : null, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'NOT_ADMIN');
                 return resp.status(403).json({ message: "Access denied. Admin only." });
             }
 
@@ -124,6 +182,7 @@ const adminController = {
 
             // Prevent admin from disabling their own account
             if (userId === req.session.userId.toString()) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'ToggleUserStatus', userId, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'SELF_DISABLE_ATTEMPT');
                 return resp.status(403).json({ message: "You cannot disable your own account." });
             }
 
@@ -164,10 +223,28 @@ const adminController = {
     disableUser: async (req, resp) => {
         try {
             if (req.session.role !== "admin") {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'DisableUser', req.body && req.body.userId ? req.body.userId : null, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'NOT_ADMIN');
                 return resp.status(403).json({ message: "Access denied. Admin only." });
             }
 
-            const { userId } = req.body;
+            const { userId, password } = req.body;
+
+            // Verify admin password for this sensitive operation
+            if (!password) {
+                return resp.status(400).json({ message: "Password required for this action." });
+            }
+
+            const admin = await User.findById(req.session.userId).exec();
+            if (!admin) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'DisableUser', userId, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'ADMIN_NOT_FOUND');
+                return resp.status(404).json({ message: "Admin user not found." });
+            }
+
+            const isPasswordValid = await bcrypt.compare(password, admin.password);
+            if (!isPasswordValid) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'DisableUser', userId, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'INVALID_ADMIN_PASSWORD');
+                return resp.status(401).json({ message: "Invalid admin password." });
+            }
 
             // Prevent admin from disabling their own account
             if (userId === req.session.userId.toString()) {
@@ -204,10 +281,28 @@ const adminController = {
     enableUser: async (req, resp) => {
         try {
             if (req.session.role !== "admin") {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'EnableUser', req.body && req.body.userId ? req.body.userId : null, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'NOT_ADMIN');
                 return resp.status(403).json({ message: "Access denied. Admin only." });
             }
 
-            const { userId } = req.body;
+            const { userId, password } = req.body;
+
+            // Verify admin password for this sensitive operation
+            if (!password) {
+                return resp.status(400).json({ message: "Password required for this action." });
+            }
+
+            const admin = await User.findById(req.session.userId).exec();
+            if (!admin) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'EnableUser', userId, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'ADMIN_NOT_FOUND');
+                return resp.status(404).json({ message: "Admin user not found." });
+            }
+
+            const isPasswordValid = await bcrypt.compare(password, admin.password);
+            if (!isPasswordValid) {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'EnableUser', userId, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'INVALID_ADMIN_PASSWORD');
+                return resp.status(401).json({ message: "Invalid admin password." });
+            }
 
             User.findByIdAndUpdate(
                 userId,

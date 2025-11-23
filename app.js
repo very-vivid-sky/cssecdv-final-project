@@ -47,6 +47,15 @@ app.engine(
 
 const routes = require('./routes/routes.js');
 
+app.use(auditContextMiddleware);
+app.use((req, res, next) => {
+    console.log('[AUDIT CONTEXT]', {
+        ipAddress: req.auditContext?.ipAddress,
+        userAgent: req.auditContext?.userAgent
+    });
+    next();
+});
+
 app.use(express.static('public'));
 app.use(session({
     secret: mongoSecret,
@@ -58,7 +67,6 @@ app.use(session({
       expires: 1000*60*60 // 1 hour
     })
 }));
-app.use(`/`, routes);
 
 module.exports = app;
 
@@ -68,14 +76,7 @@ function finalClose() {
     process.exit();
 }
 
-app.use(auditContextMiddleware);
-app.use((req, res, next) => {
-    console.log('[AUDIT CONTEXT]', {
-        ipAddress: req.auditContext?.ipAddress,
-        userAgent: req.auditContext?.userAgent
-    });
-    next();
-});
+app.use(`/`, routes);
 
 process.on('SIGTERM', finalClose); //general termination signal
 process.on('SIGINT', finalClose);  //catches when ctrl + c is used
