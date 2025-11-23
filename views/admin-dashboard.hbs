@@ -47,7 +47,6 @@
                                     <th>Role</th>
                                     <th>Status</th>
                                     <th>Joined</th>
-                                    <th>Reviews</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -72,7 +71,6 @@
                                         {{/if}}
                                     </td>
                                     <td>{{this.joined}}</td>
-                                    <td>{{this.totalReviews}}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <button type="button" class="btn btn-outline-primary changeRoleBtn {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}" data-bs-toggle="modal" data-bs-target="#roleModal" data-user-id="{{this.id}}" data-username="{{this.username}}" data-current-role="{{this.role}}" {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}>

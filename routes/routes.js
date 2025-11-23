@@ -9,7 +9,7 @@ const mainController = require('../controllers/mainController.js');
 const reviewController = require('../controllers/reviewController.js');
 const sessionController = require('../controllers/sessionController.js');
 const adminController = require('../controllers/adminController.js');
-const { isAdmin, isAccountActive } = require('../controllers/authMiddleware.js');
+const { isAdmin, isAccountActive, isManager, isStrictManager } = require('../controllers/authMiddleware.js');
 const helper = require("../controllers/controllerHelper.js")
 const { checkAccountLockout } = require('../middleware/accountLockoutMiddleware.js');
 
@@ -30,6 +30,8 @@ app.get('/restaurants',restaurantController.getAll);
 app.get('/restaurant/:id',restaurantController.getById);
 app.get('/restaurant/:id/:sort',restaurantController.getById);
 app.post('/restaurant/:id', upload.array("images[]"), reviewController.createReview_post);
+// flag a review (managers)
+app.post('/review/:id/flag', isManager, reviewController.flagReview);
 app.get("/search", route_search);
 app.get("/search/:query", route_search);
 
@@ -51,6 +53,11 @@ app.post('/api/admin/users/change-role', isAdmin, adminController.changeUserRole
 app.post('/api/admin/users/toggle-status', isAdmin, adminController.toggleUserStatus);
 app.post('/api/admin/users/disable', isAdmin, adminController.disableUser);
 app.post('/api/admin/users/enable', isAdmin, adminController.enableUser);
+
+// Manager-only views for flagged reviews
+app.get('/manager/flagged', isStrictManager, reviewController.getFlaggedReviews);
+app.post('/manager/review/:id/unflag', isStrictManager, reviewController.unflagReview);
+app.post('/manager/review/:id/remove', isStrictManager, reviewController.removeReview);
 
 // Apply account active middleware to all routes
 app.use(isAccountActive);

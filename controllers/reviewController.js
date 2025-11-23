@@ -3,6 +3,7 @@ const helper = require("./controllerHelper");
 const Restaurant = require('../models/restaurantSchema.js');
 const User = require('../models/userSchema.js');
 const Review = require('../models/reviewSchema.js');
+const auditLogger = require('../middleware/auditLogger.js');
 var userId = "65f05288fe85e01b514bbdab";
 
 const reviewController = {
@@ -72,6 +73,7 @@ const reviewController = {
         let sortBy = req.params.sort;
         let resId = req.params.id;
         let userId = req.session.userId;
+        let role = req.session.role;
 
         // get restaurant details for ownerId
         helper.getRestaurant({"_id": resId}, function(resto) {
@@ -79,7 +81,7 @@ const reviewController = {
             // then get all relevant reviews
             helper.getAllReviews(resId, function(revData) {
                 // finally get formatted data...
-                let reviews = reviewController.getSortedReviews(sortBy, revData, userId, ownerId);
+                let reviews = reviewController.getSortedReviews(sortBy, revData, userId, ownerId, role);
                 return resp.status(200).render("partials/resto-review", {
                     reviews: reviews
                 })
@@ -132,12 +134,16 @@ const reviewController = {
             establishmentResponse: r.establishmentResponse.body,
 
             actionBtn: action,
+            flagged: r.flagged || false,
+            flaggedBy: r.flaggedBy,
+            flaggedAt: r.flaggedAt,
+            flagReason: r.flagReason
         }
         return rev;
     },
 
     // sorts reviews
-    getSortedReviews: function (sortedBy, revData, loggedInId, ownerId) {
+    getSortedReviews: function (sortedBy, revData, loggedInId, ownerId, role) {
         let reviews = [];
 
         // fail fast
@@ -148,8 +154,15 @@ const reviewController = {
         }
 
         for (let r of revData) {
+            // skip flagged reviews for non-managers
+            if (r.flagged && !(role === 'manager' || role === 'admin')) {
+                continue;
+            }
             // for each review do stuff
-            reviews.push(reviewController.formatReview(r, loggedInId, ownerId));
+            const formatted = reviewController.formatReview(r, loggedInId, ownerId);
+            // include whether the current viewer can flag/manage
+            formatted.canFlag = (role === 'manager' || role === 'admin');
+            reviews.push(formatted);
         }
 
         // for all cases: sort by newest first
@@ -175,6 +188,133 @@ const reviewController = {
 
         return reviews;
     },
+
+    // Manager endpoints
+    // Flag a review for manager review
+    flagReview: async function(req, resp) {
+        try {
+            const reviewId = req.params.id;
+            const reason = req.body.reason || null;
+            const managerId = req.session.userId;
+
+            const review = await Review.findById(reviewId);
+            if (!review) return resp.status(404).json({ message: 'Review not found' });
+
+            review.flagged = true;
+            review.flaggedBy = managerId;
+            review.flaggedAt = new Date();
+            review.flagReason = reason;
+
+            await review.save();
+            // audit log
+            try {
+                await auditLogger.logAuditEvent('FLAG_REVIEW', 'success', {
+                    userId: managerId,
+                    resource: 'Review',
+                    resourceId: reviewId,
+                    ipAddress: req.auditContext?.ipAddress || 'UNKNOWN',
+                    userAgent: req.auditContext?.userAgent || 'UNKNOWN',
+                    details: { reason }
+                });
+            } catch (e) { console.error('Audit log error', e); }
+
+            return resp.status(200).json({ message: 'Review flagged for manager review' });
+        } catch (error) {
+            console.error('Error flagging review:', error);
+            return resp.status(500).json({ message: 'Error flagging review' });
+        }
+    },
+
+    // View all flagged reviews (manager dashboard)
+    getFlaggedReviews: async function(req, resp) {
+        try {
+            // only managers reach here via middleware
+            const flagged = await Review.find({ flagged: true })
+                .populate('userAcc')
+                .populate('restaurantAcc')
+                .populate('flaggedBy')
+                .exec();
+
+            const data = flagged.map(r => ({
+                id: r._id.toString(),
+                username: r.userAcc ? r.userAcc.userName : 'Unknown',
+                userId: r.userAcc ? r.userAcc._id.toString() : null,
+                restaurantId: r.restaurantAcc ? r.restaurantAcc._id.toString() : null,
+                restaurantName: r.restaurantAcc ? r.restaurantAcc.name : 'Unknown',
+                rating: r.rating,
+                comment: r.reviewBody,
+                flaggedAt: r.flaggedAt ? helper.formatDateTime(r.flaggedAt) : null,
+                flaggedBy: r.flaggedBy ? (r.flaggedBy.userName || String(r.flaggedBy)) : null,
+                flagReason: r.flagReason
+            }));
+
+            return resp.render('manager-flagged', {
+                layout: 'index',
+                title: 'Flagged Reviews',
+                clientType: helper.getClientType(req),
+                reviews: data
+            });
+        } catch (error) {
+            console.error('Error getting flagged reviews:', error);
+            return resp.status(500).send({ message: error.message });
+        }
+    },
+
+    // Unflag a review (keep) - manager chooses to keep
+    unflagReview: async function(req, resp) {
+        try {
+            const reviewId = req.params.id;
+            const review = await Review.findById(reviewId);
+            if (!review) return resp.status(404).json({ message: 'Review not found' });
+
+            review.flagged = false;
+            review.flaggedBy = null;
+            review.flaggedAt = null;
+            review.flagReason = null;
+            await review.save();
+            // audit log
+            try {
+                await auditLogger.logAuditEvent('UNFLAG_REVIEW', 'success', {
+                    userId: req.session.userId,
+                    resource: 'Review',
+                    resourceId: reviewId,
+                    ipAddress: req.auditContext?.ipAddress || 'UNKNOWN',
+                    userAgent: req.auditContext?.userAgent || 'UNKNOWN'
+                });
+            } catch (e) { console.error('Audit log error', e); }
+
+            return resp.status(200).json({ message: 'Review unflagged (kept)' });
+        } catch (error) {
+            console.error('Error unflagging review:', error);
+            return resp.status(500).json({ message: 'Error unflagging review' });
+        }
+    },
+
+    // Remove a review - manager chooses to remove
+    removeReview: async function(req, resp) {
+        try {
+            const reviewId = req.params.id;
+            const review = await Review.findById(reviewId);
+            if (!review) return resp.status(404).json({ message: 'Review not found' });
+
+            await Review.deleteOne({ _id: reviewId });
+            // audit log
+            try {
+                await auditLogger.logAuditEvent('REMOVE_REVIEW', 'success', {
+                    userId: req.session.userId,
+                    resource: 'Review',
+                    resourceId: reviewId,
+                    ipAddress: req.auditContext?.ipAddress || 'UNKNOWN',
+                    userAgent: req.auditContext?.userAgent || 'UNKNOWN'
+                });
+            } catch (e) { console.error('Audit log error', e); }
+
+            return resp.status(200).json({ message: 'Review removed' });
+        } catch (error) {
+            console.error('Error removing review:', error);
+            return resp.status(500).json({ message: 'Error removing review' });
+        }
+    }
 
 
 };
