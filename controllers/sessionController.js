@@ -44,7 +44,7 @@ const sessionController = {
 
     logout: function(req, resp) {
         // check if logged in
-        if (helper.isLoggedIn(req)) {
+        if (helper.getClientType(req)) {
             // destroy session, log out
             req.session.destroy(function() {
                 resp.redirect("/");

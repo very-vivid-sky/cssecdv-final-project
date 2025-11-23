@@ -51,7 +51,7 @@ const restaurantController = {
                 layout: 'index',
                 title: "Restaurants",
                 restaurants: data,
-                clientType: helper.isLoggedIn(req),
+                clientType: helper.getClientType(req),
             });
         }).catch((error) => {
             console.log(error);
@@ -92,7 +92,7 @@ const restaurantController = {
                     openingTime: helper.formatTime(resto.openingTime.h, resto.openingTime.m),
                     closingTime: helper.formatTime(resto.closingTime.h, resto.closingTime.m),
                     images: resto.images,
-                    clientType: helper.isLoggedIn(req),
+                    clientType: helper.getClientType(req),
                     // function generates reviews in object form compatible with handlebars
                     reviews: reviewController.getSortedReviews("helpful-first", revData, req.session.userId, resto.estOwner),
                     rating: ave,
@@ -107,7 +107,7 @@ const restaurantController = {
         resp.render("search", {
             title: "Search",
             layout: "index",
-            clientType: helper.isLoggedIn(req)
+            clientType: helper.getClientType(req)
         }) 
     },
 
