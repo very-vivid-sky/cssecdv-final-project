@@ -44,6 +44,7 @@ const userSchema = mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true
+        },
         
         failedLoginAttempts: {
             type: Number,
