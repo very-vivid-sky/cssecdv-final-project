@@ -1,4 +1,5 @@
 const User = require('../models/userSchema.js');
+const { logAccountLockout } = require('./auditLogger');
 
 // Middleware to check if user account is locked due to failed login attempts
 // Prevents login if account is currently locked
@@ -34,6 +35,17 @@ const checkAccountLockout = async (req, res, next) => {
                     lockedUntil: null,
                     failedLoginAttempts: 0
                 });
+
+                // Log the account unlock
+                try {
+                    await logAccountLockout(
+                        user._id, 
+                        req?.ip || 'unknown', 
+                        (req && req.get('user-agent')) || 'unknown'
+                    );
+                } catch (auditError) {
+                    console.error('Failed to log account unlock:', auditError);
+                }
             }
         }
 
@@ -43,7 +55,6 @@ const checkAccountLockout = async (req, res, next) => {
         next();
     }
 };
-
 
 // Reset failed login attempts after successful login
 
@@ -62,11 +73,13 @@ const resetFailedAttempts = async (userId) => {
 /**
  * Increment failed login attempts and lock account if threshold reached
  * @param {string} email - User email
+ * @param {object} req - Express request object (for IP and user-agent logging)
  * @param {number} maxAttempts - Maximum allowed failed attempts (default: 5)
  * @param {number} lockoutDurationMinutes - How long to lock account (default: 15)
  */
 const recordFailedAttempt = async (
     email,
+    req,
     maxAttempts = 5,
     lockoutDurationMinutes = 15
 ) => {
@@ -91,6 +104,18 @@ const recordFailedAttempt = async (
                     Date.now() + lockoutDurationMinutes * 60 * 1000
                 );
                 updates.lockedUntil = lockoutUntil;
+
+                // Log the account lockout
+                try {
+                    await logAccountLockout(
+                        user._id, 
+                        req?.ip || 'unknown', 
+                        (req && req.get('user-agent')) || 'unknown'
+                    );
+                } catch (auditError) {
+                    console.error('Failed to log account lockout:', auditError);
+                    // Don't throw - continue with the account lock even if audit log fails
+                }
             }
         }
 

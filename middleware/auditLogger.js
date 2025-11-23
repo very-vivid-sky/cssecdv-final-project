@@ -46,7 +46,7 @@ const logAuditEvent = async (action, result, options = {}) => {
 const auditContextMiddleware = (req, res, next) => {
   // Attach audit context to request for use in controllers
   req.auditContext = {
-    ipAddress: req.ip || req.connection.remoteAddress,
+    ipAddress: req.ip || req.socket?.remoteAddress || 'unknown',
     userAgent: req.get('user-agent')
   };
   next();
@@ -55,35 +55,42 @@ const auditContextMiddleware = (req, res, next) => {
 // Log login attempt
 
 const logLoginAttempt = async (email, success, ipAddress, userAgent, errorMessage = null) => {
-  await logAuditEvent(
-    success ? 'LOGIN_SUCCESS' : 'LOGIN_FAILED',
-    success ? 'success' : 'failure',
-    {
-      userId: email,
-      resource: 'User',
-      ipAddress,
-      userAgent,
-      errorMessage,
-      details: { email }
+    try {
+            await logAuditEvent(
+        success ? 'LOGIN_SUCCESS' : 'LOGIN_FAILED',
+        success ? 'success' : 'failure',
+        {
+        userId: email,
+        resource: 'User',
+        ipAddress,
+        userAgent,
+        errorMessage,
+        details: { email }
+        }
+  );    } catch (error) {
+        console.error('Failed to log login attempt:', error);
     }
-  );
 };
 
 // Log account lockout
 
 const logAccountLockout = async (userId, ipAddress, userAgent) => {
-  await logAuditEvent(
-    'ACCOUNT_LOCKED',
-    'success',
-    {
-      userId,
-      resource: 'User',
+  try {
+    await logAuditEvent(
+      'ACCOUNT_LOCKED',
+      'success',
+      {
+        userId,
+        resource: 'User',
       resourceId: userId,
       ipAddress,
       userAgent,
       details: { reason: 'Multiple failed login attempts' }
     }
   );
+    } catch (error) {
+        console.error('Failed to log account lockout:', error);
+    }
 };
 
 /**
