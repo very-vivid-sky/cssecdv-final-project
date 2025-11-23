@@ -161,7 +161,7 @@ const userController = {
                     bio: clientParentArr.userDetails,
                     image: clientParentArr.userPicture,
                     userId: clientParentArr,
-                    clientType: true
+                    clientType: helper.getClientType(req),
                 });
             } else {
                 resp.status(500).send({ message: "An error occured while loading your profile." });
@@ -227,7 +227,7 @@ const userController = {
                         joined: user.createdAt,
                         images: helper.getPfp(user),
                         userName: user.userName,
-                        clientType: helper.isLoggedIn(req),
+                        clientType: helper.getClientType(req),
                         reviews: reviews,
                         bio: user.userDetails,
                     }

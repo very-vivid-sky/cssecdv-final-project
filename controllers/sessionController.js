@@ -73,6 +73,20 @@ const sessionController = {
                 bcrypt.compare(req.body.password, user.password, function(err, res) {
                     if (err) {
                         reject(err);
+	login: function(req, resp) {
+		// TODO encryption
+        let searchQuery = { userEmail: req.body.email, password: req.body.password };
+        // get data
+		helper.getUserFromData("userEmail", searchQuery.userEmail, function (user) {
+            // check if user exists
+            if (user != undefined) {
+                // hash pass
+                bcrypt.compare(req.body.password, user.password, function(e, res) {
+                    if (res) {
+                        // email matches password
+                        req.session.userId = user._id
+                        req.session.role = user.clientType;
+                        resp.redirect("/");
                     } else {
                         resolve(res);
                     }
@@ -152,7 +166,7 @@ const sessionController = {
 
     logout: function (req, resp) {
         // check if logged in
-        if (helper.isLoggedIn(req)) {
+        if (helper.getClientType(req)) {
             // destroy session, log out
             req.session.destroy(function () {
                 resp.redirect('/');

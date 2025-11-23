@@ -1,7 +1,14 @@
-{{#if clientType}}
-  {{>clientheader}}
+{{#if (eq clientType "admin")}}
+    {{> adminheader}}
+
+{{else if (eq clientType "manager")}}
+    {{> managerheader}}
+
+{{else if (eq clientType "user")}}
+    {{> clientheader}}
+
 {{else}}
-  {{>guestheader}}
+    {{> guestheader}}
 {{/if}}
 
 <body>

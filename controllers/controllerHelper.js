@@ -40,6 +40,11 @@ const helper = {
 		});
 	},
 
+	getClientType: function(req) {
+    	if (!req.session.userId) return "guest";
+
+    	return req.session.role; 
+	},
 
 	isLoggedIn: function(req) {
 		/*
