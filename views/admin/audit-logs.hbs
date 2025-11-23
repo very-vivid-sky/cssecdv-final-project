@@ -1,0 +1,71 @@
+<div class="container mt-4">
+  <h1>Audit Logs</h1>
+  <p class="text-muted">Security event log - Admin only</p>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5>Filter Logs</h5>
+    </div>
+    <div class="card-body">
+      <form method="GET" class="row g-3">
+        
+        <div class="col-md-3">
+          <label for="action" class="form-label">Action</label>
+          <select class="form-select" id="action" name="action">
+            <option value="">All Actions</option>
+            <option value="LOGIN_SUCCESS" {{#if (eq filters.action 'LOGIN_SUCCESS')}}selected{{/if}}>Login Success</option>
+            <option value="LOGIN_FAILED" {{#if (eq filters.action 'LOGIN_FAILED')}}selected{{/if}}>Login Failed</option>
+            <option value="REGISTRATION" {{#if (eq filters.action 'REGISTRATION')}}selected{{/if}}>Registration</option>
+            <option value="ACCESS_DENIED" {{#if (eq filters.action 'ACCESS_DENIED')}}selected{{/if}}>Access Denied</option>
+            <option value="INVALID_INPUT" {{#if (eq filters.action 'INVALID_INPUT')}}selected{{/if}}>Invalid Input</option>
+            <option value="ACCOUNT_LOCKED" {{#if (eq filters.action 'ACCOUNT_LOCKED')}}selected{{/if}}>Account Locked</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label for="result" class="form-label">Result</label>
+          <select class="form-select" id="result" name="result">
+            <option value="">All Results</option>
+            <option value="success" {{#if (eq filters.result 'success')}}selected{{/if}}>Success</option>
+            <option value="failure" {{#if (eq filters.result 'failure')}}selected{{/if}}>Failure</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label for="daysBack" class="form-label">Time Period</label>
+          <select class="form-select" id="daysBack" name="daysBack">
+            <option value="1" {{#if (eq filters.daysBack 1)}}selected{{/if}}>Last 24 Hours</option>
+            <option value="7" {{#if (eq filters.daysBack 7)}}selected{{/if}}>Last 7 Days</option>
+            <option value="30" {{#if (eq filters.daysBack 30)}}selected{{/if}}>Last 30 Days</option>
+            <option value="90" {{#if (eq filters.daysBack 90)}}selected{{/if}}>Last 90 Days</option>
+          </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Export Button -->
+  <div class="mb-3">
+    <a href="/admin/logs/export?daysBack={{filters.daysBack}}" class="btn btn-success">
+      📥 Export as JSON
+    </a>
+  </div>
+
+  <!-- Logs Table -->
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Timestamp</th>
+            <th>Action</th>
+            <th>User ID</th>
+            <th>Resource</th>
+            <th>Result</th>
+            <th>IP Address

@@ -78,7 +78,7 @@ const helper = {
 		resp.status(403).render("error-403", {
 		  title: "Forbidden",
 		  layout: "index",
-		  clientType: helper.isLoggedIn(req)
+		  clientType: helper.getClientType(req)
 		})
 	  },
 
@@ -87,7 +87,7 @@ const helper = {
 		resp.status(404).render("error-404", {
 		  title: "Page not found",
 		  layout: "index",
-		  clientType: helper.isLoggedIn(req)
+		  clientType: helper.getClientType(req)
 		})
 	  },
 
@@ -132,6 +132,12 @@ const helper = {
 	},
 
 	// gets a restaurant as an object by searching for its id, then runs function fn()
+	getClientType: function(req) {
+    	if (!req.session.userId) return "guest";
+
+    	return req.session.role; 
+	},
+
 	getRestaurant: async function(resId, fn) {
 		Restaurant.findOne({_id: resId}).then(function(res) {
 			if (res != undefined) {

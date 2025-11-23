@@ -9,6 +9,7 @@ const mainController = require('../controllers/mainController.js');
 const reviewController = require('../controllers/reviewController.js');
 const sessionController = require('../controllers/sessionController.js');
 const helper = require("../controllers/controllerHelper.js")
+const { checkAccountLockout } = require('../middleware/accountLockoutMiddleware.js');
 
 const app = express();
 
@@ -34,7 +35,8 @@ app.get("/search/:query", route_search);
 app.get('/register',userController.registerUser_get);
 app.post('/register',upload.single("avatar"), userController.registerUser_post);
 app.get('/login',userController.login_get);
-app.post('/login',sessionController.login);
+// app.post('/login',sessionController.login);
+app.post('/login', checkAccountLockout, sessionController.login);
 app.get('/user/:id', userController.clientDetails_get);
 app.get('/userdetails/', userController.editUser_get);
 app.post("/userdetails/", userController.editUser_post);

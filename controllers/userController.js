@@ -1,3 +1,4 @@
+const auditLogger = require('../middleware/auditLogger.js');
 const express = require('express');
 const helper = require('./controllerHelper.js');
 const User = require('../models/userSchema.js');
@@ -53,6 +54,7 @@ const userController = {
         }
     },
 
+
     registerUser_post: async (req, resp) => {
         // deny if logged in already
         if (helper.isLoggedIn(req)) {
@@ -76,6 +78,110 @@ const userController = {
                 layout: 'index',
                 title: "Register",
                 message: validatePassword_errorMsg
+        if (body.password.length > 7) {
+            if (body.password == body.password2) {
+                helper.getUserFromData("userEmail", body.email, async function(oldUser) {
+                    if (oldUser == undefined) {
+                        // probably valid?
+
+                        // salt password
+                        bcrypt.genSalt(saltRounds, function(err, salt) {
+                            bcrypt.hash(req.body.password, salt, async function(err, hashedPass) {
+                                // add to db
+                                let user = new User({
+                                    userName: req.body.username,
+                                    userEmail: req.body.email,
+                                    password: hashedPass,
+                                    userDetails: req.body.bio,
+                                    clientType: "user",
+                                })
+                                
+                                user.save().then(async function() {
+                                    // Log successful registration
+                                    await auditLogger.logRegistration(
+                                        user._id,
+                                        user.userEmail,
+                                        req.auditContext?.ipAddress,
+                                        req.auditContext?.userAgent
+                                    );
+                                    
+                                    // log in & redirect
+                                    req.session.userId = user._id;
+                                    resp.redirect("/");
+                                }).catch(async (error) => {
+                                    // Log registration save error
+                                    await auditLogger.logAuditEvent(
+                                        'REGISTRATION',
+                                        'failure',
+                                        {
+                                            userId: body.email,
+                                            resource: 'User',
+                                            ipAddress: req.auditContext?.ipAddress,
+                                            userAgent: req.auditContext?.userAgent,
+                                            errorMessage: error.message
+                                        }
+                                    );
+                                    
+                                    console.error('Registration save error:', error);
+                                    resp.status(500).render('register', {
+                                        layout: 'index',
+                                        title: 'Register',
+                                        message: 'Registration failed. Please try again.'
+                                    });
+                                });
+                            })
+                        })
+                    } else {
+                        // error: email exists
+                        // Log email already registered validation failure
+                        await auditLogger.logValidationFailure(
+                            'UNKNOWN',
+                            'User',
+                            'Email already registered',
+                            req.auditContext?.ipAddress,
+                            req.auditContext?.userAgent
+                        );
+                        
+                        resp.render("register", {
+                            layout: 'index',
+                            title: "Register",
+                            message: "Unable to complete registration. Please try again."
+                        });
+                    }
+                })
+
+            } else {
+                // error: pass1 and pass2 are not the same
+                // Log password mismatch validation failure
+                await auditLogger.logValidationFailure(
+                    'UNKNOWN',
+                    'User',
+                    'Password mismatch',
+                    req.auditContext?.ipAddress,
+                    req.auditContext?.userAgent
+                );
+                
+                return resp.render('register', {
+                    layout: 'index',
+                    title: "Register",
+                    message: "Registration failed. Please verify your input and try again."
+                });
+            }
+        } else {
+            // error: length less than 8
+            // Log password too short validation failure
+            await auditLogger.logValidationFailure(
+                'UNKNOWN',
+                'User',
+                'Password too short',
+                req.auditContext?.ipAddress,
+                req.auditContext?.userAgent
+            );
+            
+            return resp.render('register', {
+                layout: 'index',
+                title: "Register",
+                message: "Registration failed. Please verify your input and try again."
             });
         } else if (body.password != body.password2) {
             // error: pass1 and pass2 are not the same
@@ -121,6 +227,7 @@ const userController = {
         }
     },
 
+
     login_get: async (req, resp) => {
         // deny if logged in already
         if (helper.isLoggedIn(req)) {
@@ -139,6 +246,7 @@ const userController = {
         }
     },
 
+
     editUser_get: async (req, resp) => {
         helper.validateAccess("user", req, function(isValid, user) {
             if (!isValid) {
@@ -154,7 +262,22 @@ const userController = {
                     bio: user.userDetails,
                     image: user.userPicture,
                     userId: user._id,
-                    clientType: true
+                    clientType: helper.getClientType(req),
+        helper.getUserFromData("_id", req.session.userId, function (user) {
+            if (user != undefined || user != null) {
+                let clientParentArr = [];
+                clientParentArr = user;
+
+                return resp.status(200).render('edit-user', {
+                    layout: 'index',
+                    title: "Profile",
+                    userName: clientParentArr.userName,
+                    joined: clientParentArr.createdAt.toDateString(),
+                    totalReviews: clientParentArr.totalReviews,
+                    bio: clientParentArr.userDetails,
+                    image: clientParentArr.userPicture,
+                    userId: clientParentArr,
+                    clientType: helper.getClientType(req),
                 });
             }
         })
@@ -244,11 +367,12 @@ const userController = {
         })
     },
 
+
     clientDetails_get: async (req, resp) => {
         const { id } = req.params;
-            helper.getUserFromData("_id", id, function (user) {
-                helper.getAllReviewsBy(id, function (revData) {
-                    helper.getAllRestaurants(function (restaurants) {
+        helper.getUserFromData("_id", id, function (user) {
+            helper.getAllReviewsBy(id, function (revData) {
+                helper.getAllRestaurants(function (restaurants) {
                     let uploadedImgs = [];
                     let reviews = [];
                     let rating = [];
@@ -298,11 +422,11 @@ const userController = {
                         joined: user.createdAt,
                         images: helper.getPfp(user),
                         userName: user.userName,
-                        clientType: helper.isLoggedIn(req),
+                        clientType: helper.getClientType(req),
                         reviews: reviews,
                         bio: user.userDetails,
                     }
-                     );
+                    );
 
                 });
             });
@@ -311,8 +435,8 @@ const userController = {
             resp.status(500).send({ message: error.message });
         });
     },
-
 };
+
 
 
 module.exports = userController;
