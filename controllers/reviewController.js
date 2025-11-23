@@ -8,11 +8,40 @@ var userId = "65f05288fe85e01b514bbdab";
 const reviewController = {
     createReview_post: async (req, resp) => {
         try {
-            let resId = req.params.id;
-            console.log("THE RESTO IS "+resId);
-            let uploadedImgs = [];
+            // validate access first
+            helper.validateAccess("user", req, function (isValid, user) {
+                if (!isValid) {
+                    // deny request;
+                    return resp.status(403).send({ message: "Cannot write a review as an unregistered user" });
+                } else {
+                    let resId = req.params.id
+                    helper.getRestaurant(resId, function(resto) {
+                        // if user is a manager here
+                        if (resto.estOwner == user._id) {
+                            // deny request;
+                            return resp.status(403).send({ message: "Cannot write a review as the manager of this establishment" });
+                        }
 
-            /*
+                        // write and publish review
+
+                        let review = new Review({
+                            userAcc: user._id,
+                            reviewBody: req.body.review,
+                            restaurantAcc: resto._id,
+                            rating: req.body.rating,
+                            images: [],
+                        })
+                        review.save();
+                        resp.redirect(req.get("Referrer") || "/");
+                    })
+                }
+            })
+        } catch(error) {
+            return resp.status(500).send({ message: error.message });
+        }
+
+
+        /*
             //images uploaded by the user
             if(req.files){
                 let uploadedImgs = new Array();
@@ -35,23 +64,7 @@ const reviewController = {
                 });
                 review.save(); 
             }
-            */
-
-            // create review
-            let review = new Review({
-                userAcc: req.session.userId,
-                reviewBody: req.body.review,
-                restaurantAcc: resId,
-                rating: req.body.rating,
-                images: uploadedImgs,
-            });
-            review.save(); // save
-
-            resp.redirect(req.get("Referrer") || "/");
-        } catch (error) {
-            console.log(error);
-            resp.status(500).send({ message: error.message });
-        }
+        */
        
     },
 

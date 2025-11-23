@@ -44,8 +44,21 @@ const userSchema = mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true
+        
+        failedLoginAttempts: {
+            type: Number,
+            default: 0
+        },
+        
+        lockedUntil: {
+            type: Date,
+            default: null
+        },
+        
+        lastFailedLoginAttempt: {
+            type: Date,
+            default: null
         }
-
     },
     
     {
