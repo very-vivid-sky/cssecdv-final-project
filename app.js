@@ -87,6 +87,19 @@ function finalClose() {
 
 app.use(`/`, routes);
 
+// Generic error handler (catches multer file filter errors and others)
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err && err.message ? err.message : err);
+    if (err && typeof err.message === 'string' && err.message.toLowerCase().includes('jpeg')) {
+        return res.status(400).send({ message: 'Only JPEG and PNG files are allowed.' });
+    }
+    if (err && typeof err.message === 'string' && err.message.toLowerCase().includes('png')) {
+        return res.status(400).send({ message: 'Only JPEG and PNG files are allowed.' });
+    }
+    // fallback
+    return res.status(500).send({ message: 'Internal Server Error' });
+});
+
 process.on('SIGTERM', finalClose); //general termination signal
 process.on('SIGINT', finalClose);  //catches when ctrl + c is used
 process.on('SIGQUIT', finalClose); //catches other termination commands

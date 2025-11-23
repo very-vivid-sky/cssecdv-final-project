@@ -11,7 +11,7 @@
       </div>
       {{/if}}
 
-      <form name="register-form" id="register-form" class="form vstack login-form gap-1" action="/register" method="POST">
+      <form name="register-form" id="register-form" class="form vstack login-form gap-1" action="/register" method="POST" enctype="multipart/form-data">
       <!-- oninput='password2.setCustomValidity(password2.value != password1.value ? "Passwords do not match." : "")' -->
 
         <input type="text" name="email" id="email" placeholder="Email" class="form-control" required>
@@ -23,7 +23,7 @@
         <input type="text" name="bio" class="form-control" id="bio" placeholder="Enter Short Description (optional)">
         <div>
           <label class="form-label mb-0 mt-1 mx-3" for="customFile">Upload Avatar Picture (optional):</label>
-          <input type="file" name="avatar" class="form-control" id="avatar" />
+          <input type="file" name="avatar" class="form-control" id="avatar" accept="image/png,image/jpeg" />
         </div>
         <a href='login.html'>
           <button id="register-btn" type="submit" class="btn btn-success">Register</button>
@@ -36,4 +36,16 @@
     </div>
   </section>
 </body>
+<script>
+// Client-side validation: only allow jpeg/jpg/png
+document.getElementById('avatar').addEventListener('change', function(e) {
+  const file = this.files[0];
+  if (!file) return;
+  const allowed = ['image/png', 'image/jpeg'];
+  if (!allowed.includes(file.type)) {
+    alert('Only JPEG and PNG images are allowed for avatars.');
+    this.value = '';
+  }
+});
+</script>
 <script src="pages/register.js"></script>

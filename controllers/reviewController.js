@@ -1,3 +1,4 @@
+const validReview = require('../middleware/validation/validateReview.js');
 const express = require('express');
 const helper = require("./controllerHelper");
 const Restaurant = require('../models/restaurantSchema.js');
