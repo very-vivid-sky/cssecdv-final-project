@@ -39,6 +39,11 @@ const userSchema = mongoose.Schema(
         clientType :{
             type: String, 
             default: "guest"
+        },
+
+        isActive: {
+            type: Boolean,
+            default: true
         }
 
     },

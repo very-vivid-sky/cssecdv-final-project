@@ -13,6 +13,16 @@ const sessionController = {
 		helper.getUserFromData("userEmail", searchQuery.userEmail, function (user) {
             // check if user exists
             if (user != undefined) {
+                // Check if account is active
+                if (!user.isActive) {
+                    resp.render('login', {
+                        layout: 'index',
+                        title: 'Result page',
+                        message: 'Your account has been disabled. Please contact an administrator.'
+                    });
+                    return;
+                }
+
                 // hash pass
                 bcrypt.compare(req.body.password, user.password, function(e, res) {
                     if (res) {

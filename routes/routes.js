@@ -8,6 +8,8 @@ const userController = require('../controllers/userController.js');
 const mainController = require('../controllers/mainController.js');
 const reviewController = require('../controllers/reviewController.js');
 const sessionController = require('../controllers/sessionController.js');
+const adminController = require('../controllers/adminController.js');
+const { isAdmin, isAccountActive } = require('../controllers/authMiddleware.js');
 
 const app = express();
 
@@ -37,6 +39,17 @@ app.post('/login',sessionController.login);
 app.get('/user/:id', userController.clientDetails_get);
 app.get('/userdetails/', userController.editUser_get);
 app.get('/logout',sessionController.logout);
+
+// admin routes (protected by isAdmin middleware)
+app.get('/admin/dashboard', isAdmin, adminController.getAdminDashboard);
+app.get('/api/admin/users', isAdmin, adminController.getAllUsers_get);
+app.post('/api/admin/users/change-role', isAdmin, adminController.changeUserRole);
+app.post('/api/admin/users/toggle-status', isAdmin, adminController.toggleUserStatus);
+app.post('/api/admin/users/disable', isAdmin, adminController.disableUser);
+app.post('/api/admin/users/enable', isAdmin, adminController.enableUser);
+
+// Apply account active middleware to all routes
+app.use(isAccountActive);
 
 //review routes
 
