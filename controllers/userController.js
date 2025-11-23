@@ -1,8 +1,10 @@
+const auditLogger = require('../middleware/auditLogger.js');
 const express = require('express');
 const helper = require('./controllerHelper.js');
 const User = require('../models/userSchema.js');
 const bcrypt = require('bcryptjs');
 const saltRounds = 5;
+
 
 const userController = {
 
@@ -18,18 +20,19 @@ const userController = {
         }
     },
 
+
     registerUser_post: async (req, resp) => {
         let body = req.body
 
         if (body.password.length > 7) {
             if (body.password == body.password2) {
-                helper.getUserFromData("userEmail", body.email, function(oldUser) {
+                helper.getUserFromData("userEmail", body.email, async function(oldUser) {
                     if (oldUser == undefined) {
                         // probably valid?
-    
+
                         // salt password
                         bcrypt.genSalt(saltRounds, function(err, salt) {
-                            bcrypt.hash(req.body.password, salt, function(err, hashedPass) {
+                            bcrypt.hash(req.body.password, salt, async function(err, hashedPass) {
                                 // add to db
                                 let user = new User({
                                     userName: req.body.username,
@@ -38,43 +41,97 @@ const userController = {
                                     userDetails: req.body.bio,
                                     clientType: "user",
                                 })
-                                user.save().then(function() {
+                                
+                                user.save().then(async function() {
+                                    // Log successful registration
+                                    await auditLogger.logRegistration(
+                                        user._id,
+                                        user.userEmail,
+                                        req.auditContext?.ipAddress,
+                                        req.auditContext?.userAgent
+                                    );
+                                    
                                     // log in & redirect
                                     req.session.userId = user._id;
                                     resp.redirect("/");
+                                }).catch(async (error) => {
+                                    // Log registration save error
+                                    await auditLogger.logAuditEvent(
+                                        'REGISTRATION',
+                                        'failure',
+                                        {
+                                            userId: body.email,
+                                            resource: 'User',
+                                            ipAddress: req.auditContext?.ipAddress,
+                                            userAgent: req.auditContext?.userAgent,
+                                            errorMessage: error.message
+                                        }
+                                    );
+                                    
+                                    console.error('Registration save error:', error);
+                                    resp.status(500).render('register', {
+                                        layout: 'index',
+                                        title: 'Register',
+                                        message: 'Registration failed. Please try again.'
+                                    });
                                 });
                             })
                         })
                     } else {
                         // error: email exists
+                        // Log email already registered validation failure
+                        await auditLogger.logValidationFailure(
+                            'UNKNOWN',
+                            'User',
+                            'Email already registered',
+                            req.auditContext?.ipAddress,
+                            req.auditContext?.userAgent
+                        );
+                        
                         resp.render("register", {
                             layout: 'index',
                             title: "Register",
-                            // message: "Account registered to email, please log in"
                             message: "Unable to complete registration. Please try again."
                         });
                     }
                 })
-    
+
             } else {
                 // error: pass1 and pass2 are not the same
+                // Log password mismatch validation failure
+                await auditLogger.logValidationFailure(
+                    'UNKNOWN',
+                    'User',
+                    'Password mismatch',
+                    req.auditContext?.ipAddress,
+                    req.auditContext?.userAgent
+                );
+                
                 return resp.render('register', {
                     layout: 'index',
                     title: "Register",
-                    // message: "Please re-enter your password"
                     message: "Registration failed. Please verify your input and try again."
                 });
             }
         } else {
             // error: length less than 8
+            // Log password too short validation failure
+            await auditLogger.logValidationFailure(
+                'UNKNOWN',
+                'User',
+                'Password too short',
+                req.auditContext?.ipAddress,
+                req.auditContext?.userAgent
+            );
+            
             return resp.render('register', {
                 layout: 'index',
                 title: "Register",
-                // message: "Passwords are required to be at least 8 characters long"
                 message: "Registration failed. Please verify your input and try again."
             });
         }
     },
+
 
     login_get: async (req, resp) => {
         try {
@@ -88,12 +145,12 @@ const userController = {
         }
     },
 
+
     editUser_get: async (req, resp) => {
         helper.getUserFromData("_id", req.session.userId, function (user) {
             if (user != undefined || user != null) {
                 let clientParentArr = [];
                 clientParentArr = user;
-
 
                 return resp.status(200).render('edit-user', {
                     layout: 'index',
@@ -115,11 +172,12 @@ const userController = {
         });
     },
 
+
     clientDetails_get: async (req, resp) => {
         const { id } = req.params;
-            helper.getUserFromData("_id", id, function (user) {
-                helper.getAllReviewsBy(id, function (revData) {
-                    helper.getAllRestaurants(function (restaurants) {
+        helper.getUserFromData("_id", id, function (user) {
+            helper.getAllReviewsBy(id, function (revData) {
+                helper.getAllRestaurants(function (restaurants) {
                     let uploadedImgs = [];
                     let reviews = [];
                     let rating = [];
@@ -173,7 +231,7 @@ const userController = {
                         reviews: reviews,
                         bio: user.userDetails,
                     }
-                     );
+                    );
 
                 });
             });
@@ -181,10 +239,9 @@ const userController = {
             console.log(error);
             resp.status(500).send({ message: error.message });
         });
-
     },
-
 };
+
 
 
 module.exports = userController;

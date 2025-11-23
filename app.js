@@ -7,6 +7,8 @@ const bodyParser = require('body-parser')
 const mongoStore = require('connect-mongodb-session')(session);
 require("dotenv").config();
 
+const { auditContextMiddleware } = require('./middleware/auditLogger.js');
+
 const mongoURI = process.env.MONGODB;
 const mongoSecret = process.env.MONGODB_SECRET;
 
@@ -64,6 +66,15 @@ function finalClose() {
     mongoose.connection.close();
     process.exit();
 }
+
+app.use(auditContextMiddleware);
+app.use((req, res, next) => {
+    console.log('[AUDIT CONTEXT]', {
+        ipAddress: req.auditContext?.ipAddress,
+        userAgent: req.auditContext?.userAgent
+    });
+    next();
+});
 
 process.on('SIGTERM', finalClose); //general termination signal
 process.on('SIGINT', finalClose);  //catches when ctrl + c is used
