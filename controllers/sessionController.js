@@ -42,7 +42,7 @@ const sessionController = {
 
             if (!user) {
        
-                await lockoutMiddleware.recordFailedAttempt(email, MAX_ATTEMPTS, LOCK_MINUTES);
+                await lockoutMiddleware.recordFailedAttempt(email, req, MAX_ATTEMPTS, LOCK_MINUTES);
 
                 try {
                     await auditLogger.logLoginAttempt(
@@ -90,7 +90,7 @@ const sessionController = {
             const passwordOk = await comparePassword(password, user.password);
 
             if (!passwordOk) {
-                await lockoutMiddleware.recordFailedAttempt(email, MAX_ATTEMPTS, LOCK_MINUTES);
+                await lockoutMiddleware.recordFailedAttempt(email, req, MAX_ATTEMPTS, LOCK_MINUTES);
 
                 try {
                     await auditLogger.logLoginAttempt(
