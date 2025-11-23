@@ -46,6 +46,7 @@ app.engine(
 );
 
 const routes = require('./routes/routes.js');
+const noCacheMiddleware = require('./middleware/noCacheMiddleware.js');
 
 app.use(auditContextMiddleware);
 app.use((req, res, next) => {
@@ -65,8 +66,16 @@ app.use(session({
       uri: mongoURI,
       collection: 'mySession',
       expires: 1000*60*60 // 1 hour
-    })
+    }),
+    cookie: {
+        secure: false, // Set to true in production with HTTPS
+        httpOnly: true, // Prevents client-side JS from accessing the session cookie
+        sameSite: 'lax' // CSRF protection
+    }
 }));
+
+// Apply no-cache headers to prevent back-button access after logout
+app.use(noCacheMiddleware);
 
 module.exports = app;
 
