@@ -47,7 +47,6 @@
                                     <th>Role</th>
                                     <th>Status</th>
                                     <th>Joined</th>
-                                    <th>Reviews</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -72,7 +71,6 @@
                                         {{/if}}
                                     </td>
                                     <td>{{this.joined}}</td>
-                                    <td>{{this.totalReviews}}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <button type="button" class="btn btn-outline-primary changeRoleBtn {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}" data-bs-toggle="modal" data-bs-target="#roleModal" data-user-id="{{this.id}}" data-username="{{this.username}}" data-current-role="{{this.role}}" {{#if (eq @root.currentUserId this.id)}}disabled{{/if}}>
@@ -128,20 +126,45 @@
     </div>
 </div>
 
+<!-- Password Verification Modal (for sensitive actions) -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog" style="z-index: 1070;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passwordModalLabel">Confirm with Your Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="passwordActionDescription">This is a sensitive action. Please enter your password to confirm.</p>
+                <div class="form-group">
+                    <label for="adminPassword" class="form-label">Your Admin Password:</label>
+                    <input type="password" id="adminPassword" class="form-control" placeholder="Enter your password">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmPasswordBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Success Message -->
-<div id="successAlert" class="alert alert-success alert-dismissible fade position-fixed top-0 start-50 translate-middle-x mt-3" style="display:none; z-index: 1050;">
+<div id="successAlert" class="alert alert-success alert-dismissible fade position-fixed top-0 start-50 translate-middle-x mt-3" style="display:none; z-index: 9999;">
     <span id="successMessage"></span>
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 
 <!-- Error Message -->
-<div id="errorAlert" class="alert alert-danger alert-dismissible fade position-fixed top-0 start-50 translate-middle-x mt-3" style="display:none; z-index: 1050;">
+<div id="errorAlert" class="alert alert-danger alert-dismissible fade position-fixed top-0 start-50 translate-middle-x mt-3" style="display:none; z-index: 9999;">
     <span id="errorMessage"></span>
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 
 <script>
 let currentUserId = null;
+let currentAction = null; // 'changeRole', 'disable', or 'enable'
+let currentActionData = null; // stores data for the action
 
 // Event listeners for role change button
 document.querySelectorAll('.changeRoleBtn').forEach(btn => {
@@ -161,32 +184,111 @@ document.getElementById('confirmRoleChangeBtn').addEventListener('click', async 
         return;
     }
 
+    // Set up the pending action and show password modal
+    currentAction = 'changeRole';
+    currentActionData = { userId: currentUserId, newRole: newRole };
+    document.getElementById('passwordActionDescription').textContent = 'Changing a user role is a sensitive action. Please enter your password to confirm.';
+    document.getElementById('adminPassword').value = '';
+    
+    // Close role modal and show password modal
+    const roleModal = bootstrap.Modal.getInstance(document.getElementById('roleModal'));
+    roleModal.hide();
+    const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+    passwordModal.show();
+});
+
+// Event listener for password confirmation
+document.getElementById('confirmPasswordBtn').addEventListener('click', async function() {
+    const password = document.getElementById('adminPassword').value;
+
+    if (!password) {
+        showError('Please enter your password');
+        return;
+    }
+
     try {
-        const response = await fetch('/api/admin/users/change-role', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                userId: currentUserId,
-                newRole: newRole
-            })
-        });
+        // Execute the pending action with the password
+        if (currentAction === 'changeRole') {
+            const response = await fetch('/api/admin/users/change-role', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: currentActionData.userId,
+                    newRole: currentActionData.newRole,
+                    password: password
+                })
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        if (response.ok) {
-            showSuccess(data.message);
-            // Close modal and reload table
-            const modal = bootstrap.Modal.getInstance(document.getElementById('roleModal'));
-            modal.hide();
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showError(data.message);
+            if (response.ok) {
+                showSuccess(data.message);
+                const passwordModal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+                passwordModal.hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                // Show generic error for security - keep modal open
+                showError('Unable to complete this action. Please check your credentials and try again.');
+                console.error('Backend error:', data.message);
+                document.getElementById('adminPassword').value = '';
+            }
+        } else if (currentAction === 'disable') {
+            const response = await fetch('/api/admin/users/disable', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: currentActionData.userId,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showSuccess(data.message);
+                const passwordModal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+                passwordModal.hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                // Show generic error for security - keep modal open
+                showError('Unable to complete this action. Please check your credentials and try again.');
+                console.error('Backend error:', data.message);
+                document.getElementById('adminPassword').value = '';
+            }
+        } else if (currentAction === 'enable') {
+            const response = await fetch('/api/admin/users/enable', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: currentActionData.userId,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showSuccess(data.message);
+                const passwordModal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+                passwordModal.hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                // Show generic error for security - keep modal open
+                showError('Unable to complete this action. Please check your credentials and try again.');
+                console.error('Backend error:', data.message);
+                document.getElementById('adminPassword').value = '';
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('An error occurred while changing the user role');
+        showError('Unable to complete this action. Please check your credentials and try again.');
+        document.getElementById('adminPassword').value = '';
     }
 });
 
@@ -197,27 +299,12 @@ document.querySelectorAll('.disableBtn').forEach(btn => {
         const username = this.dataset.username;
 
         if (confirm(`Are you sure you want to disable ${username}'s account?`)) {
-            try {
-                const response = await fetch('/api/admin/users/disable', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ userId: userId })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showSuccess(data.message);
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showError(data.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('An error occurred while disabling the account');
-            }
+            currentAction = 'disable';
+            currentActionData = { userId: userId };
+            document.getElementById('passwordActionDescription').textContent = `Disabling ${username}'s account is a sensitive action. Please enter your password to confirm.`;
+            document.getElementById('adminPassword').value = '';
+            const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+            passwordModal.show();
         }
     });
 });
@@ -229,27 +316,12 @@ document.querySelectorAll('.enableBtn').forEach(btn => {
         const username = this.dataset.username;
 
         if (confirm(`Are you sure you want to enable ${username}'s account?`)) {
-            try {
-                const response = await fetch('/api/admin/users/enable', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ userId: userId })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showSuccess(data.message);
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showError(data.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('An error occurred while enabling the account');
-            }
+            currentAction = 'enable';
+            currentActionData = { userId: userId };
+            document.getElementById('passwordActionDescription').textContent = `Enabling ${username}'s account is a sensitive action. Please enter your password to confirm.`;
+            document.getElementById('adminPassword').value = '';
+            const passwordModal = new bootstrap.Modal(document.getElementById('passwordModal'));
+            passwordModal.show();
         }
     });
 });

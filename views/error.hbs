@@ -1,0 +1,19 @@
+{{#if (eq clientType "admin")}}
+    {{> adminheader}}
+
+{{else if (eq clientType "manager")}}
+    {{> managerheader}}
+
+{{else if (eq clientType "user")}}
+    {{> clientheader}}
+
+{{else}}
+    {{> guestheader}}
+{{/if}}
+
+<body class="d-flex flex-column min-vh-100">
+  <div class="container my-4">  
+    <h1>Error</h1>
+    <div>We encountered an issue while processing your request. Please try again later.</div>
+  </div>
+</body>

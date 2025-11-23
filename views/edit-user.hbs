@@ -79,7 +79,7 @@
 
                 <div>
                   <label class="form-label mb-0 mt-1 mx-3" for="customFile">Change Avatar Picture:</label>
-                  <input type="file" class="form-control" id="customFile" />
+                  <input type="file" class="form-control" id="customFile" name="avatar" accept="image/png,image/jpeg" />
                 </div>
                 <div>
                   <label class="form-label mb-0 mt-1 mx-3" for="customFile">Change Description:</label>
@@ -100,3 +100,18 @@
   </div>
 </div>
 
+<script>
+// client-side validation for edit-user avatar
+const customFileInput = document.getElementById('customFile');
+if (customFileInput) {
+  customFileInput.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const allowed = ['image/png', 'image/jpeg'];
+    if (!allowed.includes(file.type)) {
+      alert('Only JPEG and PNG images are allowed for avatars.');
+      this.value = '';
+    }
+  });
+}
+</script>

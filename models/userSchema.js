@@ -28,7 +28,8 @@ const userSchema = mongoose.Schema(
         },
 
         userPicture:{
-            type:String
+            type:String,
+            default: null
         },
 
         totalReviews :{

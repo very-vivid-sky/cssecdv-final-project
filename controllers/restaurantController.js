@@ -94,7 +94,7 @@ const restaurantController = {
                     images: resto.images,
                     clientType: helper.getClientType(req),
                     // function generates reviews in object form compatible with handlebars
-                    reviews: reviewController.getSortedReviews("helpful-first", revData, req.session.userId, resto.estOwner),
+                    reviews: reviewController.getSortedReviews("helpful-first", revData, req.session.userId, resto.estOwner, req.session.role),
                     rating: ave,
                     restaurantAcc: resId,
                     userAcc:  req.session.userId,

@@ -46,6 +46,16 @@ app.engine(
 );
 
 const routes = require('./routes/routes.js');
+const noCacheMiddleware = require('./middleware/noCacheMiddleware.js');
+
+app.use(auditContextMiddleware);
+app.use((req, res, next) => {
+    console.log('[AUDIT CONTEXT]', {
+        ipAddress: req.auditContext?.ipAddress,
+        userAgent: req.auditContext?.userAgent
+    });
+    next();
+});
 
 app.use(express.static('public'));
 app.use(session({
@@ -56,9 +66,16 @@ app.use(session({
       uri: mongoURI,
       collection: 'mySession',
       expires: 1000*60*60 // 1 hour
-    })
+    }),
+    cookie: {
+        secure: false, // Set to true in production with HTTPS
+        httpOnly: true, // Prevents client-side JS from accessing the session cookie
+        sameSite: 'lax' // CSRF protection
+    }
 }));
-app.use(`/`, routes);
+
+// Apply no-cache headers to prevent back-button access after logout
+app.use(noCacheMiddleware);
 
 module.exports = app;
 
@@ -68,13 +85,19 @@ function finalClose() {
     process.exit();
 }
 
-app.use(auditContextMiddleware);
-app.use((req, res, next) => {
-    console.log('[AUDIT CONTEXT]', {
-        ipAddress: req.auditContext?.ipAddress,
-        userAgent: req.auditContext?.userAgent
-    });
-    next();
+app.use(`/`, routes);
+
+// Generic error handler (catches multer file filter errors and others)
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err && err.message ? err.message : err);
+    if (err && typeof err.message === 'string' && err.message.toLowerCase().includes('jpeg')) {
+        return res.status(400).send({ message: 'Only JPEG and PNG files are allowed.' });
+    }
+    if (err && typeof err.message === 'string' && err.message.toLowerCase().includes('png')) {
+        return res.status(400).send({ message: 'Only JPEG and PNG files are allowed.' });
+    }
+    // fallback
+    return res.status(500).send({ message: 'Internal Server Error' });
 });
 
 process.on('SIGTERM', finalClose); //general termination signal

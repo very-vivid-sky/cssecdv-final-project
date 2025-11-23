@@ -42,7 +42,7 @@ const sessionController = {
 
             if (!user) {
        
-                await lockoutMiddleware.recordFailedAttempt(email, MAX_ATTEMPTS, LOCK_MINUTES);
+                await lockoutMiddleware.recordFailedAttempt(email, req, MAX_ATTEMPTS, LOCK_MINUTES);
 
                 try {
                     await auditLogger.logLoginAttempt(
@@ -65,7 +65,7 @@ const sessionController = {
                 return resp.render('login', {
                     layout: 'index',
                     title: 'Result page',
-                    message: 'Your account has been disabled. Please contact an administrator.'
+                    message: 'Invalid username and/or password'
                 });
             }
 
@@ -90,7 +90,7 @@ const sessionController = {
             const passwordOk = await comparePassword(password, user.password);
 
             if (!passwordOk) {
-                await lockoutMiddleware.recordFailedAttempt(email, MAX_ATTEMPTS, LOCK_MINUTES);
+                await lockoutMiddleware.recordFailedAttempt(email, req, MAX_ATTEMPTS, LOCK_MINUTES);
 
                 try {
                     await auditLogger.logLoginAttempt(
@@ -151,13 +151,52 @@ const sessionController = {
         }
     },
 
-    logout: function (req, resp) {
+    logout: async function (req, resp) {
         if (!helper.isLoggedIn(req)) {
             return helper.get403Page(req, resp);
         }
 
-        req.session.destroy(() => {
-            return resp.redirect('/');
+        const userId = req.session.userId;
+        const userEmail = req.session.email || 'UNKNOWN';
+
+        try {
+            // Log the logout event
+            await auditLogger.logAuditEvent(
+                'LOGOUT',
+                'success',
+                {
+                    userId: userId,
+                    resource: 'User',
+                    ipAddress: req.auditContext?.ipAddress || 'UNKNOWN',
+                    userAgent: req.auditContext?.userAgent || 'UNKNOWN',
+                    details: { action: 'User logged out' }
+                }
+            );
+        } catch (e) {
+            console.error('Failed to log logout event:', e);
+        }
+
+        // Set cache-control headers to prevent back-button access
+        resp.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, private');
+        resp.setHeader('Pragma', 'no-cache');
+        resp.setHeader('Expires', '0');
+
+        // Destroy session completely
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Session destroy error:', err);
+                return resp.status(500).render('login', {
+                    layout: 'index',
+                    title: 'Logout',
+                    message: 'An error occurred during logout. Please clear your browser cache and cookies manually.'
+                });
+            }
+
+            // Clear session cookie
+            resp.clearCookie('connect.sid', { path: '/' });
+
+            // Redirect to login with no-cache headers
+            return resp.redirect('/login');
         });
     }
 };
