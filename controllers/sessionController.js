@@ -18,6 +18,7 @@ const sessionController = {
                     if (res) {
                         // email matches password
                         req.session.userId = user._id
+                        req.session.role = user.clientType;
                         resp.redirect("/");
                     } else {
                         // email or password are incorrect
@@ -43,7 +44,7 @@ const sessionController = {
 
     logout: function(req, resp) {
         // check if logged in
-        if (helper.isLoggedIn(req)) {
+        if (helper.getClientType(req)) {
             // destroy session, log out
             req.session.destroy(function() {
                 resp.redirect("/");

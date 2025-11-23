@@ -38,6 +38,7 @@ app.engine(
         layoutsDir: "views/layouts/",
         helpers: {
             renderStars: function(rating) { return helper.generateStarHTML(rating); },
+            eq: (a, b) => a === b,
         }
     })
 );
