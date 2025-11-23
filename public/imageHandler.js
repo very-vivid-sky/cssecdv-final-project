@@ -1,17 +1,32 @@
 const path = require('path');
 const multer = require('multer');
 
-var storate = multer.diskStorage({
-    destination: function(req,file,cb){
-        cb(null,'public/uploads/');
+// Storage engine
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, 'public/uploads/');
     },
-    filename: function(req,file,cb){
-        let ext = path.extname(file.originalname)
-        cb(null,Date.now()+ext);
-    },
-     resize: { width: 500, height: 500 },
-})
+    filename: function(req, file, cb) {
+        const ext = path.extname(file.originalname);
+        cb(null, Date.now() + ext);
+    }
+});
 
-var upload = multer({storage: storate});
+// Only allow images
+function imageOnlyFilter(req, file, cb) {
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+        return cb(new Error("Only image files are allowed."), false);
+    }
+
+    cb(null, true);
+}
+
+const upload = multer({
+    storage: storage,
+    fileFilter: imageOnlyFilter,
+    limits: { fileSize: 1 * 1024 * 1024 } // 1 MB max
+});
 
 module.exports = upload;

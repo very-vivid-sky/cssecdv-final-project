@@ -8,6 +8,14 @@ const userController = require('../controllers/userController.js');
 const mainController = require('../controllers/mainController.js');
 const reviewController = require('../controllers/reviewController.js');
 const sessionController = require('../controllers/sessionController.js');
+<<<<<<< Updated upstream
+=======
+const adminController = require('../controllers/adminController.js');
+const { isAdmin, isAccountActive, isManager, isStrictManager } = require('../controllers/authMiddleware.js');
+const helper = require("../controllers/controllerHelper.js")
+const { checkAccountLockout } = require('../middleware/accountLockoutMiddleware.js');
+const validateRegister = require('../middleware/validation/validateRegister.js');
+>>>>>>> Stashed changes
 
 const app = express();
 
@@ -31,7 +39,12 @@ app.get("/search/:query", route_search);
 
 // user routes
 app.get('/register',userController.registerUser_get);
-app.post('/register',upload.single("avatar"), userController.registerUser_post);
+//app.post('/register',upload.single("avatar"), userController.registerUser_post);
+app.post('/register',
+    upload.single("avatar"),   
+    validateRegister,          
+    userController.registerUser_post 
+);
 app.get('/login',userController.login_get);
 app.post('/login',sessionController.login);
 app.get('/user/:id', userController.clientDetails_get);
