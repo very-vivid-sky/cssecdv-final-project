@@ -2,6 +2,7 @@ const User = require('../../models/userSchema');
 const auditLogger = require('../auditLogger');
 const bcrypt = require("bcryptjs");
 const helper = require('../../controllers/controllerHelper.js');
+const authMiddleware = require('../../controllers/authMiddleware');
 
 // Password policy
 const validatePassword_settings = {
@@ -83,6 +84,12 @@ module.exports = async function validateAccountEdit(req, res, next) {
 
             if (!validatePassword(password_new)) {
                 renderObject.message_warning = "New password must meet complexity requirements.";
+                return res.render("edit-user", renderObject);
+            }
+
+            const reused = await authMiddleware.checkForPasswordReuse(user, password_new);
+            if (reused) {
+                renderObject.message_warning = "You cannot reuse your previous passwords.";
                 return res.render("edit-user", renderObject);
             }
         }
