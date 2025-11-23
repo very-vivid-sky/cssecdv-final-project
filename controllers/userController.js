@@ -169,7 +169,7 @@ const userController = {
                         joined: user.createdAt,
                         images: helper.getPfp(user),
                         userName: user.userName,
-                        clientType: helper.isLoggedIn(req),
+                        clientType: helper.getClientType(req),
                         reviews: reviews,
                         bio: user.userDetails,
                     }

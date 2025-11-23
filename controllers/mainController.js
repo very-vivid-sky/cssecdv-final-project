@@ -9,7 +9,7 @@ const mainController = {
     resp.render("index", {
       title: "Staples",
       layout: "index",
-      clientType: helper.isLoggedIn(req)
+      clientType: helper.getClientType(req)
     })
   },
   
@@ -17,7 +17,7 @@ const mainController = {
     resp.render("aboutus", {
       title: "Staples",
       layout: "index",
-      clientType: helper.isLoggedIn(req)
+      clientType: helper.getClientType(req)
     })
   }
 }

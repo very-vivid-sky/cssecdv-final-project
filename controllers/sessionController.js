@@ -18,6 +18,7 @@ const sessionController = {
                     if (res) {
                         // email matches password
                         req.session.userId = user._id
+                        req.session.role = user.clientType;
                         resp.redirect("/");
                     } else {
                         // email or password are incorrect
