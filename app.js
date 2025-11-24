@@ -33,16 +33,30 @@ app.use(express.urlencoded({ extended: true }));
 
 app.set('view engine', 'hbs');
 app.engine(
-    "hbs",
-    handlebars.engine({
-        extname: "hbs",
-        defaultLayout: false,
-        layoutsDir: "views/layouts/",
-        helpers: {
-            renderStars: function(rating) { return helper.generateStarHTML(rating); },
-            eq: (a, b) => a === b,
+  "hbs",
+  handlebars.engine({
+    extname: "hbs",
+    defaultLayout: false,
+    layoutsDir: "views/layouts/",
+    helpers: {
+      renderStars: (rating) => helper.generateStarHTML(rating),
+
+      eq: (a, b) => a === b,
+
+      formatDate: (date) => {
+        if (!date) return "—";
+        return new Date(date).toLocaleString();
+      },
+
+      stringify: (obj) => {
+        try {
+          return JSON.stringify(obj, null, 2); // optional pretty format
+        } catch (e) {
+          return "";
         }
-    })
+      }
+    }
+  })
 );
 
 const routes = require('./routes/routes.js');

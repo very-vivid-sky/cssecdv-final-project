@@ -97,6 +97,7 @@ app.post('/api/admin/users/change-role', isAdmin, adminController.changeUserRole
 app.post('/api/admin/users/toggle-status', isAdmin, adminController.toggleUserStatus);
 app.post('/api/admin/users/disable', isAdmin, adminController.disableUser);
 app.post('/api/admin/users/enable', isAdmin, adminController.enableUser);
+app.get('/logs', isAdmin, adminController.getAuditLogs);
 
 // Manager-only views for flagged reviews
 app.get('/manager/flagged', isStrictManager, reviewController.getFlaggedReviews);

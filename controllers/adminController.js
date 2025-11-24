@@ -328,6 +328,52 @@ const adminController = {
             console.log(error);
             resp.status(500).json({ message: error.message });
         }
+    },
+    
+    // Get audit logs (admin only)
+    getAuditLogs: async (req, resp) => {
+        try {
+            // Check if user is admin
+            if (req.session.role !== "admin") {
+                await audit.logAccessDenied(req.session.userId || 'ANONYMOUS', 'AuditLogs', null, req.auditContext?.ipAddress, req.auditContext?.userAgent, 'NOT_ADMIN');
+                return resp.status(403).render('error', { message: "Access denied. Admin only." });
+            }
+
+            // Get filter parameters from query
+            const filters = {};
+            if (req.query.action) filters.action = req.query.action;
+            if (req.query.result) filters.result = req.query.result;
+            if (req.query.userId) filters.userId = req.query.userId;
+
+            // Fetch audit logs with filters
+            const AuditLog = require('../models/auditLogSchema.js');
+            const logs = await AuditLog.find(filters)
+                .sort({ timestamp: -1 })
+                .limit(500)
+                .lean();
+
+            // Log the access to audit logs
+            await audit.logAuditEvent('VIEW_AUDIT_LOGS', 'success', {
+                userId: req.session.userId,
+                resource: 'AuditLogs',
+                ipAddress: req.auditContext?.ipAddress,
+                userAgent: req.auditContext?.userAgent,
+                filtersApplied: Object.keys(filters).length > 0 ? filters : 'none'
+            });
+
+            // Render the logs view
+            resp.status(200).render('logs', { 
+                layout: 'index',
+                logs: logs,
+                title: "Audit Logs",
+                clientType: helper.getClientType(req),
+                currentUserId: req.session.userId.toString()
+            });
+
+        } catch (error) {
+            console.error("Error fetching audit logs:", error);
+            resp.status(500).render('error', { message: "Failed to fetch audit logs." });
+        }
     }
 
 };
