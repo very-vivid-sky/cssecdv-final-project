@@ -11,10 +11,10 @@ const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+")
 // Password policy
 const validatePassword_settings = {
     minLength: 8,
-    uppercaseReq: false,
-    lowercaseReq: false,
-    numberReq: false,
-    specialReq: false,
+    uppercaseReq: true,
+    lowercaseReq: true,
+    numberReq: true,
+    specialReq: true,
 };
 
 const validatePassword = function(password) { 
