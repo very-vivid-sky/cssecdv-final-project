@@ -2,30 +2,15 @@ const User = require('../../models/userSchema');
 const auditLogger = require('../auditLogger');
 const bcrypt = require("bcryptjs");
 const helper = require('../../controllers/controllerHelper.js');
-const authMiddleware = require('../../controllers/authMiddleware');
-
-// Password policy
-const validatePassword_settings = {
-    minLength: 8,
-    uppercaseReq: true,
-    lowercaseReq: true,
-    numberReq: true,
-    specialReq: true,
-};
-
-function validatePassword(password) { 
-    if (password.length < validatePassword_settings.minLength) return false;
-    if (validatePassword_settings.uppercaseReq && !(/[A-Z]/.test(password))) return false;
-    if (validatePassword_settings.lowercaseReq && !(/[a-z]/.test(password))) return false;
-    if (validatePassword_settings.numberReq && !(/[0-9]/.test(password))) return false;
-    if (validatePassword_settings.specialReq && !(/[!@#$%^&*()\-_\\\/~`{}[\]|:;"'<>,.?+=]/.test(password))) return false;
-    return true;
-}
+const authMiddleware = require("../../controllers/authMiddleware.js");
 
 module.exports = async function validateAccountEdit(req, res, next) {
     try {
         const user = req.userData;  
-        const { username, bio, password_old, password_new, password_retype } = req.body;
+        const {
+            username, bio, password_old, password_new, password_retype,
+            securityQn1_q, securityQn1_a, securityQn2_q, securityQn2_a
+        } = req.body;
 
         const renderObject = {
             layout: 'index',
@@ -37,6 +22,7 @@ module.exports = async function validateAccountEdit(req, res, next) {
             bio: user.userDetails,
             image: user.userPicture,
             userId: user._id,
+            securityQuestions: authMiddleware.securityQuestions,
         };
 
         if (username) {
@@ -82,7 +68,7 @@ module.exports = async function validateAccountEdit(req, res, next) {
                 return res.render("edit-user", renderObject);
             }
 
-            if (!validatePassword(password_new)) {
+            if (!authMiddleware.validatePassword(password_new)) {
                 renderObject.message_warning = "New password should be at least 8 characters, contain uppercase, lowercase letters, a number, and a special character.";
                 return res.render("edit-user", renderObject);
             }
@@ -103,6 +89,26 @@ module.exports = async function validateAccountEdit(req, res, next) {
             }
         }
 
+        console.log(securityQn1_q)
+        console.log(securityQn1_a)
+        console.log(securityQn2_q)
+        console.log(securityQn2_a)
+        if (req.body.action === "change_security_qns") {
+            // for all security question related entries
+            // if you set one, you have to set all
+            if (securityQn1_q == "unset" || securityQn1_a == "" || securityQn2_a == "unset" || securityQn2_a == "") {
+                renderObject.message_warning = "Please set all your security questions.";
+                return res.render("edit-user", renderObject);
+            }
+            if (securityQn1_q == securityQn2_q) {
+                renderObject.message_warning = "Please select different security questions.";
+                return res.render("edit-user", renderObject);
+            }
+            if (securityQn1_a == securityQn2_a) {
+                renderObject.message_warning = "The answers to your security questions should not be the same. Please select different security questions.";
+                return res.render("edit-user", renderObject);
+            }
+        }
         
         if (bio && bio.length > 160) {
             renderObject.message_warning = "Bio should be less than 160 characters.";

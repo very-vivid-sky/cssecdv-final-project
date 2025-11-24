@@ -1,10 +1,10 @@
 const auditLogger = require('../middleware/auditLogger.js');
+const authMiddleware = require("./authMiddleware.js");
 const validReg = require('../middleware/validation/validateRegister.js');
 const validLogin = require('../middleware/validation/validateLogin.js');
 const validEditProfile = require('../middleware/validation/validateAccountEdit.js');
 const express = require('express');
 const helper = require('./controllerHelper.js');
-const authMiddleware = require('./authMiddleware.js');
 const User = require('../models/userSchema.js');
 const bcrypt = require('bcryptjs');
 const saltRounds = 5;
@@ -92,7 +92,7 @@ const userController = {
 
                     if (auditLogger?.logAuditEvent) {
                         await auditLogger.logAuditEvent(
-                            "REGISTRATION",
+                            "REGISTRATION_FAILED",
                             "failure",
                             {
                                 userId: email,
@@ -158,203 +158,98 @@ const userController = {
         image: user.userPicture,
         userId: user._id,
         clientType: helper.getClientType(req),
-        noSecurityQuestions: noSecurityQuestions
+        securityQuestions: authMiddleware.securityQuestions,
       });
     });
   },
 
 
- editUser_post: async (req, resp) => {
-  helper.validateAccess("user", req, async (isValid, user) => {
-    if (!isValid) return helper.get403Page(req, resp);
+  editUser_post: async (req, resp) => {
+    helper.validateAccess("user", req, async (isValid, user) => {
+      if (!isValid) return helper.get403Page(req, resp);
 
-    const body = req.body;
-    const action = body.action;
+      const body = req.body;
+      const action = body.action;
 
-    if (body.username) user.userName = body.username;
-    if (body.bio) user.userDetails = body.bio;
-    if (req.file) user.userPicture = req.file.filename;
-
-    let updated = false;
-
-    if (action === "change_username") {
-      const correct = await bcrypt.compare(body.password_old, user.password);
-      if (!correct) {
-        return resp.render("edit-user", {
-          layout: "index",
-            title: "Profile",
-            userName: user.userName,
-            joined: user.createdAt.toDateString(),
-            totalReviews: user.totalReviews,
-            bio: user.userDetails,
-            image: user.userPicture,
-            userId: user._id,
-            clientType: helper.getClientType(req),
-            noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
-          message_warning: "Current password is incorrect."
-        });
+      // object for resp.render
+      let renderObject = {
+              layout: "index",
+              title: "Profile",
+              userName: user.userName,
+              joined: user.createdAt.toDateString(),
+              totalReviews: user.totalReviews,
+              bio: user.userDetails,
+              image: user.userPicture,
+              userId: user._id,
+              clientType: helper.getClientType(req),
+              securityQuestions: authMiddleware.securityQuestions,
       }
 
-      user.userName = body.username;
-      updated = true;
-    }
-
-     if (action === "change_password") {
-      const correct = await bcrypt.compare(body.password_old, user.password);
-      if (!correct) {
-        return resp.render("edit-user", {
-          layout: "index",
-            title: "Profile",
-            userName: user.userName,
-            joined: user.createdAt.toDateString(),
-            totalReviews: user.totalReviews,
-            bio: user.userDetails,
-            image: user.userPicture,
-            userId: user._id,
-            clientType: helper.getClientType(req),
-            noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
-          message_warning: "Current password is incorrect."
-        });
-      }
-
-    if (!user.oldPasswords) user.oldPasswords = [];
-    user.oldPasswords.push(user.password);
-    if (user.oldPasswords.length > 5) user.oldPasswords.shift();
-
-      const salt = await bcrypt.genSalt(saltRounds);
-      user.password = await bcrypt.hash(body.password_new, salt);
-      user.passwordLastChanged = new Date();
-      updated = true;
-    }
-
-    if (action === "setup_security_questions") {
-      const q1 = body.securityQuestion1?.trim();
-      const a1 = body.securityAnswer1?.trim();
-      const q2 = body.securityQuestion2?.trim();
-      const a2 = body.securityAnswer2?.trim();
-      const verifyPassword = body.password_verify;
-
-      // Verify password
-      const correct = await bcrypt.compare(verifyPassword, user.password);
-      if (!correct) {
-        return resp.render("edit-user", {
-          layout: "index",
-          title: "Profile",
-          userName: user.userName,
-          joined: user.createdAt.toDateString(),
-          totalReviews: user.totalReviews,
-          bio: user.userDetails,
-          image: user.userPicture,
-          userId: user._id,
-          clientType: helper.getClientType(req),
-          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
-          message_warning: "Password verification failed."
-        });
-      }
-
-      // Validate questions and answers
-      if (!q1 || !q2 || q1 === q2) {
-        return resp.render("edit-user", {
-          layout: "index",
-          title: "Profile",
-          userName: user.userName,
-          joined: user.createdAt.toDateString(),
-          totalReviews: user.totalReviews,
-          bio: user.userDetails,
-          image: user.userPicture,
-          userId: user._id,
-          clientType: helper.getClientType(req),
-          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
-          message_warning: "Questions must be different."
-        });
-      }
-
-      if (!a1 || !a2 || a1.length < 2 || a2.length < 2 || a1.length > 100 || a2.length > 100) {
-        return resp.render("edit-user", {
-          layout: "index",
-          title: "Profile",
-          userName: user.userName,
-          joined: user.createdAt.toDateString(),
-          totalReviews: user.totalReviews,
-          bio: user.userDetails,
-          image: user.userPicture,
-          userId: user._id,
-          clientType: helper.getClientType(req),
-          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
-          message_warning: "Answers must be 2-100 characters."
-        });
-      }
-
-      if (a1.toLowerCase() === a2.toLowerCase()) {
-        return resp.render("edit-user", {
-          layout: "index",
-          title: "Profile",
-          userName: user.userName,
-          joined: user.createdAt.toDateString(),
-          totalReviews: user.totalReviews,
-          bio: user.userDetails,
-          image: user.userPicture,
-          userId: user._id,
-          clientType: helper.getClientType(req),
-          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
-          message_warning: "Answers must be different."
-        });
-      }
-
-      // Hash and store security questions
-      try {
-        const salt = await bcrypt.genSalt(saltRounds);
-        const hashedAnswer1 = await bcrypt.hash(a1.toLowerCase(), salt);
-        const hashedAnswer2 = await bcrypt.hash(a2.toLowerCase(), salt);
-
-        user.securityQuestions = [
-          { question: q1, answerHash: hashedAnswer1 },
-          { question: q2, answerHash: hashedAnswer2 }
-        ];
-        updated = true;
-      } catch (error) {
-        console.error('Error hashing security questions:', error);
-        return resp.render("edit-user", {
-          layout: "index",
-          title: "Profile",
-          userName: user.userName,
-          joined: user.createdAt.toDateString(),
-          totalReviews: user.totalReviews,
-          bio: user.userDetails,
-          image: user.userPicture,
-          userId: user._id,
-          clientType: helper.getClientType(req),
-          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
-          message_warning: "An error occurred while setting up security questions."
-        });
-      }
-    }
-
-     if (action === undefined) {
-      if (req.file) user.userPicture = req.file.filename;
+      if (body.username) user.userName = body.username;
       if (body.bio) user.userDetails = body.bio;
-      updated = true;
-    }
+      if (req.file) user.userPicture = req.file.filename;
 
-     if (updated) await user.save();
+      let updated = false;
 
-    const noSecurityQuestions = !user.securityQuestions || user.securityQuestions.length === 0;
+      if (action === "change_username") {
+        const correct = await bcrypt.compare(body.password_old, user.password);
+        if (!correct) {
+          renderObject.message_warning = "Current password is incorrect."
+          return resp.render("edit-user", renderObject);
+        }
 
-    return resp.render("edit-user", {
-      layout: "index",
-      title: "Profile",
-      userName: user.userName,
-      joined: user.createdAt.toDateString(),
-      totalReviews: user.totalReviews,
-      bio: user.userDetails,
-      image: user.userPicture,
-      userId: user._id,
-      clientType: helper.getClientType(req),
-      noSecurityQuestions: noSecurityQuestions,
-      message_success: "Profile updated successfully!"
+        user.userName = body.username;
+        renderObject.userName = body.username;
+        updated = true;
+      }
+
+      else if (action === "change_password") {
+      const correct = await bcrypt.compare(body.password_old, user.password);
+        if (!correct) {
+          renderObject.message_warning = "Current password is incorrect."
+          return resp.render("edit-user", renderObject);
+        }
+
+        if (!user.oldPasswords) user.oldPasswords = [];
+        user.oldPasswords.push(user.password);
+        if (user.oldPasswords.length > 5) user.oldPasswords.shift();
+
+        const salt = await bcrypt.genSalt(saltRounds);
+        user.password = await bcrypt.hash(body.password_new, salt);
+        user.passwordLastChanged = new Date();
+        updated = true;
+      }
+
+      else if (action === "change_security_qns") {
+        const correct = await bcrypt.compare(body.password_old, user.password);
+        if (!correct) {
+          renderObject.message_warning = "Current password is incorrect."
+          return resp.render("edit-user", renderObject);
+        }
+
+        // they're pretty much backup passwords, should encrypt them
+        let hashedA1 = await authMiddleware.encryptPassword(body.securityQn1_a);
+        let hashedA2 = await authMiddleware.encryptPassword(body.securityQn2_a);
+        user.securityQuestions = {
+          first: { question: body.securityQn1_q, answer: hashedA1 },
+          second: { question: body.securityQn2_q, answer: hashedA2 },
+        }
+
+        updated = true;
+      }
+
+      else if (action === undefined) {
+        if (req.file) user.userPicture = req.file.filename;
+        if (body.bio) { user.userDetails = body.bio; renderObject.bio = body.bio; };
+        updated = true;
+      }
+
+      if (updated) await user.save();
+
+      renderObject.message_success = "Profile updated successfully!"
+      return resp.render("edit-user", renderObject);
     });
-  });
-},
+  },
 
   clientDetails_get: async (req, resp) => {
     const { id } = req.params;
@@ -411,7 +306,7 @@ const userController = {
               title: user.userName,
               totalReviews,
               joined: user.createdAt,
-              images: helper.getPfp(user),
+              //images: helper.getPfp(user),
               userName: user.userName,
               clientType: helper.getClientType(req),
               reviews,
@@ -427,225 +322,118 @@ const userController = {
     }
   },
 
+
+  
+  // renders the base reset password screen
   resetPassword_get: async (req, resp) => {
-    // GET /reset-password - show the password reset form
     if (helper.isLoggedIn(req)) return helper.get403Page(req, resp);
 
     return resp.render('reset-password', {
       layout: 'index',
-      title: 'Reset Password',
-      step: 'identify'
+      title: "Reset password",
+      step: "identify",
     });
   },
 
-  resetPassword_post: async (req, resp) => {
-    // POST /reset-password - verify security questions and allow password change
-    if (helper.isLoggedIn(req)) return helper.get403Page(req, resp);
-
-    const { email, step } = req.body;
-
-    if (!email) {
-      return resp.render('reset-password', {
-        layout: 'index',
-        title: 'Reset Password',
-        step: 'identify',
-        message: 'Email is required.'
-      });
-    }
-
-    // Step 1: User provides email, return security questions
-    if (step === 'identify') {
-      try {
-        const user = await helper.getUserFromData('userEmail', email.trim());
-        if (!user) {
-          // Generic message to prevent email enumeration
-          return resp.render('reset-password', {
-            layout: 'index',
-            title: 'Reset Password',
-            step: 'identify',
-            message: 'If this account exists, you will be able to reset your password.'
-          });
-        }
-
-        // Store email in session (temporary) for verification step
-        req.session.resetEmail = email.trim();
-        req.session.resetUserId = user._id.toString();
-
-        // Render the security questions
+  // handles all the logic for post requests to resetPassword
+  resetPassword_post: async(req, resp) => {
+    if (req.body.step == "identify") {
+      // identify step — get the email if it exists and send the associated recovery questions
+      let user = await helper.getUserFromData("userEmail", req.body.email);
+      if (
+        user == undefined || user.securityQuestions == undefined ||
+        user.securityQuestions.first.question == null || user.securityQuestions.second.question == null ||
+        user.securityQuestions.first.answer == null || user.securityQuestions.second.answer == null
+      ) {
+        // no email /or/ no security questions — display the same error msg
         return resp.render('reset-password', {
           layout: 'index',
-          title: 'Reset Password',
-          step: 'verify',
-          questions: user.securityQuestions || [],
-          email: email.trim()
+          title: "Reset password",
+          step: "identify",
+          message_warning: "Cannot get security questions associated with this email; potentially because it is not registered or no security questions have been attached to it. If this is your account, please notify an admin to restore your account access.",
         });
-      } catch (error) {
-        console.error('Reset password email lookup error:', error);
-        return resp.status(500).render('reset-password', {
+      } else {
+        // email + security questions found — move on to the next step
+        return resp.render('reset-password', {
           layout: 'index',
-          title: 'Reset Password',
-          step: 'identify',
-          message: 'An error occurred. Please try again.'
+          title: "Reset password",
+          step: "verify",
+          email: req.body.email,
+          securityQuestion1: user.securityQuestions.first.question,
+          securityQuestion2: user.securityQuestions.second.question,
         });
       }
-    }
-
-    // Step 2: User answers security questions and provides new password
-    if (step === 'verify') {
-      try {
-        const userId = req.session.resetUserId;
-        const resetEmail = req.session.resetEmail;
-        const answer1 = req.body.answer1?.trim() || '';
-        const answer2 = req.body.answer2?.trim() || '';
-        const newPassword = req.body.newPassword || '';
-        const confirmPassword = req.body.confirmPassword || '';
-
-        if (!userId || !resetEmail) {
-          return resp.render('reset-password', {
-            layout: 'index',
-            title: 'Reset Password',
-            step: 'identify',
-            message: 'Session expired. Please start over.'
-          });
-        }
-
-        // Fetch user
-        const user = await User.findById(userId);
-        if (!user) {
-          return resp.render('reset-password', {
-            layout: 'index',
-            title: 'Reset Password',
-            step: 'identify',
-            message: 'User not found.'
-          });
-        }
-
-        // Verify answers to security questions
-        let correctAnswers = 0;
-        if (user.securityQuestions && user.securityQuestions.length >= 2) {
-          const match1 = await bcrypt.compare(answer1.toLowerCase(), user.securityQuestions[0].answerHash);
-          const match2 = await bcrypt.compare(answer2.toLowerCase(), user.securityQuestions[1].answerHash);
-          if (match1) correctAnswers++;
-          if (match2) correctAnswers++;
-        }
-
-        // Require both questions answered correctly
-        if (correctAnswers !== 2) {
-          return resp.render('reset-password', {
-            layout: 'index',
-            title: 'Reset Password',
-            step: 'verify',
-            questions: user.securityQuestions || [],
-            email: resetEmail,
-            message: 'One or more security question answers are incorrect.'
-          });
-        }
-
-        // Validate new password
-        if (!authMiddleware.validatePassword(newPassword)) {
-          return resp.render('reset-password', {
-            layout: 'index',
-            title: 'Reset Password',
-            step: 'verify',
-            questions: user.securityQuestions || [],
-            email: resetEmail,
-            message: 'Password must be at least 8 characters, contain uppercase, lowercase letters, a number, and a special character.'
-          });
-        }
-
-        // Check passwords match
-        if (newPassword !== confirmPassword) {
-          return resp.render('reset-password', {
-            layout: 'index',
-            title: 'Reset Password',
-            step: 'verify',
-            questions: user.securityQuestions || [],
-            email: resetEmail,
-            message: 'Passwords do not match.'
-          });
-        }
-
-        // Check for password reuse
-        const isReused = await authMiddleware.checkForPasswordReuse(user, newPassword);
-        if (isReused) {
-          return resp.render('reset-password', {
-            layout: 'index',
-            title: 'Reset Password',
-            step: 'verify',
-            questions: user.securityQuestions || [],
-            email: resetEmail,
-            message: 'This password has been used before. Please choose a different password.'
-          });
-        }
-
-        // Set new password
-        try {
-          const salt = await bcrypt.genSalt(saltRounds);
-          const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-          // Store old password in history
-          if (!user.oldPasswords) user.oldPasswords = [];
-          user.oldPasswords.push(user.password);
-          if (user.oldPasswords.length > 5) user.oldPasswords.shift();
-
-          user.password = hashedPassword;
-          user.passwordLastChanged = new Date();
-          await user.save();
-
-          // Log the password reset
-          try {
-            await auditLogger.logAuditEvent(
-              'PASSWORD_RESET_VIA_SECURITY_QUESTIONS',
-              'success',
-              {
-                userId: user._id,
-                resource: 'User',
-                ipAddress: req.auditContext?.ipAddress || 'UNKNOWN',
-                userAgent: req.auditContext?.userAgent || 'UNKNOWN',
-                details: { email: resetEmail }
-              }
-            );
-          } catch (e) { console.error('Failed to log password reset:', e); }
-
-          // Clear session
-          delete req.session.resetEmail;
-          delete req.session.resetUserId;
-
-          return resp.render('reset-password', {
-            layout: 'index',
-            title: 'Reset Password',
-            step: 'success',
-            email: resetEmail
-          });
-        } catch (error) {
-          console.error('Password update error:', error);
-          return resp.status(500).render('reset-password', {
-            layout: 'index',
-            title: 'Reset Password',
-            step: 'verify',
-            questions: user.securityQuestions || [],
-            email: resetEmail,
-            message: 'An error occurred while updating your password. Please try again.'
-          });
-        }
-      } catch (error) {
-        console.error('Reset password verification error:', error);
-        return resp.status(500).render('reset-password', {
+    } else if (req.body.step == "verify") {
+      // verify step — confirm that the answers given to each security question are correct; only then should we change the password
+      let user = await helper.getUserFromData("userEmail", req.body.email);
+      if (
+        user == undefined || user.securityQuestions == undefined ||
+        user.securityQuestions.first.question == null || user.securityQuestions.second.question == null ||
+        user.securityQuestions.first.answer == null || user.securityQuestions.second.answer == null
+      ) {
+        // previous step should catch such errors, but just in case!
+        return resp.render('reset-password', {
           layout: 'index',
-          title: 'Reset Password',
-          step: 'identify',
-          message: 'An error occurred. Please try again.'
+          title: "Reset password",
+          step: "identify",
+          message_warning: "An unexpected error occured while processing your request. Please try again.",
         });
-      }
-    }
+      } else {
+        // obtained security questions
+        let correct1 = await authMiddleware.comparePassword(req.body.answer1, user.securityQuestions.first.answer);
+        let correct2 = await authMiddleware.comparePassword(req.body.answer2, user.securityQuestions.second.answer);
+        if (!correct1 || !correct2) {
+          // one of them are not correct! deny
+          return resp.render("reset-password", {
+            layout: "index",
+            title: "Reset password",
+            step: "verify",
+            email: req.body.email,
+            securityQuestion1: req.body.question1,
+            securityQuestion2: req.body.question2,
+            message_warning: "One or both of the answers to the security questions were not correct. Please try again."
+          });
+        } else {
+          // one last verification: has this password been used before?
+          let wasPasswordReused = await authMiddleware.checkForPasswordReuse(user, req.body.newPassword);
+          if (wasPasswordReused) {
+            // it was! deny
+            return resp.render("reset-password", {
+              layout: "index",
+              title: "Reset password",
+              step: "verify",
+              email: req.body.email,
+              securityQuestion1: req.body.question1,
+              securityQuestion2: req.body.question2,
+              message_warning: "Unable to set your password. Try another password."
+            })
+          } else {
+            // it wasn't! set this password
+            if (!user.oldPasswords) user.oldPasswords = [];
+            user.oldPasswords.push(user.password);
+            if (user.oldPasswords.length > 5) user.oldPasswords.shift();
 
-    return resp.status(400).render('reset-password', {
-      layout: 'index',
-      title: 'Reset Password',
-      step: 'identify',
-      message: 'Invalid request.'
-    });
-  },
+            let hashedPassword = await authMiddleware.encryptPassword(req.body.newPassword);
+            user.password = hashedPassword;
+            user.save();
+
+            return resp.render("login", {
+              layout: "index",
+              title: "Login",
+              message_success: "Password reset! You may now login using this password."
+            });
+          }
+        }
+      }
+    } else {
+      return resp.render('reset-password', {
+        layout: 'index',
+        title: "Reset password",
+        step: "identify",
+        message_warning: "An unexpected error occured while processing your request. Please try again.",
+      });
+    }
+  }
 };
 
 module.exports = userController;

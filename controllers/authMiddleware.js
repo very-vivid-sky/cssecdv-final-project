@@ -4,6 +4,17 @@ const helper = require('./controllerHelper.js');
 
 const saltRounds = 5;
 
+// security questions array
+const securityQuestions = [
+    "What is the name of your first pet?",
+    "In what city were you born?",
+    "What is your mother's maiden name?",
+    "What was the name of your elementary school?",
+    "What is your favorite movie character?",
+    "What brand was your first car?",
+    "What is the name of your best friend in high school?",
+    "What was your childhood nickname?",
+]
 
 // source: https://emailregex.com/
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -11,10 +22,10 @@ const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+")
 // Password policy
 const validatePassword_settings = {
     minLength: 8,
-    uppercaseReq: false,
-    lowercaseReq: false,
-    numberReq: false,
-    specialReq: false,
+    uppercaseReq: true,
+    lowercaseReq: true,
+    numberReq: true,
+    specialReq: true,
 };
 
 const validatePassword = function(password) { 
@@ -25,7 +36,6 @@ const validatePassword = function(password) {
     if (validatePassword_settings.specialReq && !(/[!@#$%^&*()\-_\\\/~`{}[\]|:;"'<>,.?+=]/.test(password))) return false;
     return true;
 }
-
 
 
 const comparePassword = async function(plain, hash) {
@@ -259,6 +269,7 @@ const setNewPassword = async function (req, user, newPassword) {
 
 module.exports = {
     emailRegex,
+    securityQuestions,
 
     comparePassword,
     isAdmin,

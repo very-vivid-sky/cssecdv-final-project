@@ -12,10 +12,10 @@ const { isAdmin, isAccountActive, isManager, isStrictManager, isLoggedIn } = req
 const helper = require("../controllers/controllerHelper.js")
 const { checkAccountLockout } = require('../middleware/accountLockoutMiddleware.js');
 const validateRegister = require('../middleware/validation/validateRegister.js');
+const validateResetPassword = require('../middleware/validation/validateResetPassword.js');
 const validateLogin = require('../middleware/validation/validateLogin.js');
 const validateAccountEdit = require('../middleware/validation/validateAccountEdit.js');
 const validateReview = require('../middleware/validation/validateReview.js');
-const validateSecurityQuestions = require('../middleware/validation/validateSecurityQuestions.js');
 
 const User = require('../models/userSchema.js');
 
@@ -72,15 +72,14 @@ app.get('/register',userController.registerUser_get);
 //app.post('/register',upload.single("avatar"), userController.registerUser_post);
 app.post('/register',
     upload.single("avatar"),   
-    validateRegister,
-    validateSecurityQuestions,          
+    validateRegister,      
     userController.registerUser_post 
 );
 app.get('/login',userController.login_get);
 // app.post('/login',sessionController.login);
 app.post('/login', validateLogin, checkAccountLockout, sessionController.login);
-app.get('/reset-password', userController.resetPassword_get);
-app.post('/reset-password', userController.resetPassword_post);
+app.get("/resetpassword", userController.resetPassword_get);
+app.post("/resetpassword", validateResetPassword, userController.resetPassword_post);
 app.get('/user/:id', userController.clientDetails_get);
 app.get('/userdetails/', isLoggedIn, userController.editUser_get);
 app.post(

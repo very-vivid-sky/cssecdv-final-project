@@ -69,6 +69,17 @@ const userSchema = mongoose.Schema(
         lastFailedLoginAttempt: {
             type: Date,
             default: null
+        },
+
+        securityQuestions: {
+            first: {
+                question: { type: String, default: null, },
+                answer: { type: String, default: null, },
+            },
+            second: {
+                question: { type: String, default: null, },
+                answer: { type: String, default: null, },
+            },
         }
         ,
         lastAccess: {
@@ -78,13 +89,6 @@ const userSchema = mongoose.Schema(
             userAgent: { type: String, default: null },
             note: { type: String, default: null }
         },
-        
-        securityQuestions: [
-            {
-                question: { type: String, required: true },
-                answerHash: { type: String, required: true }
-            }
-        ]
     },
     
     {

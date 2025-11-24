@@ -49,7 +49,7 @@ const sessionController = {
                 return resp.render('login', {
                     layout: 'index',
                     title: 'Login',
-                    message: 'Invalid username and/or password'
+                    message_warning: 'Invalid username and/or password'
                 });
             }
 
@@ -67,7 +67,7 @@ const sessionController = {
                 return resp.render('login', {
                     layout: 'index',
                     title: 'Login',
-                    message: 'Invalid username and/or password'
+                    message_warning: 'Invalid username and/or password'
                 });
             }
 
@@ -96,7 +96,7 @@ const sessionController = {
                 return resp.render('login', {
                     layout: 'index',
                     title: 'Login',
-                    message: `Account temporarily locked. Try again in ${minutesRemaining} minute(s).`
+                    message_warning: `Account temporarily locked. Try again in ${minutesRemaining} minute(s).`
                 });
             }
 
@@ -129,7 +129,7 @@ const sessionController = {
                 return resp.render('login', {
                     layout: 'index',
                     title: 'Login',
-                    message: 'Invalid username and/or password'
+                    message_warning: 'Invalid username and/or password'
                 });
             }
 
@@ -196,7 +196,7 @@ const sessionController = {
             return resp.status(500).render('login', {
                 layout: 'index',
                 title: 'Result page',
-                message: 'An error occurred during login. Please try again.'
+                message_warning: 'An error occurred during login. Please try again.'
             });
         }
     },
