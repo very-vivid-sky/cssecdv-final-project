@@ -70,6 +70,21 @@ const userSchema = mongoose.Schema(
             type: Date,
             default: null
         }
+        ,
+        lastAccess: {
+            at: { type: Date, default: null },
+            success: { type: Boolean, default: null },
+            ip: { type: String, default: null },
+            userAgent: { type: String, default: null },
+            note: { type: String, default: null }
+        },
+        
+        securityQuestions: [
+            {
+                question: { type: String, required: true },
+                answerHash: { type: String, required: true }
+            }
+        ]
     },
     
     {

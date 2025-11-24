@@ -79,6 +79,9 @@
 
                 <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#changeUsernameModal"> Change Username </button>
                 <button type="button" class="btn btn-secondary mt-2" data-bs-toggle="modal" data-bs-target="#changePasswordModal"> Change Password </button>
+                {{#if noSecurityQuestions}}
+                <button type="button" class="btn btn-warning mt-2" data-bs-toggle="modal" data-bs-target="#setupSecurityQuestionsModal"> ⚠️ Set Up Security Questions </button>
+                {{/if}}
                 <div>
                   <label class="form-label mb-0 mt-1 mx-3" for="customFile">Change Avatar Picture:</label>
                   <input type="file" class="form-control" id="customFile" name="avatar" accept="image/png,image/jpeg" />
@@ -165,6 +168,72 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-primary">Change Password</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- Set Up Security Questions Modal -->
+<div class="modal fade" id="setupSecurityQuestionsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Set Up Security Questions</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="POST" action="/userdetails" enctype="multipart/form-data">
+        <input type="hidden" name="action" value="setup_security_questions">
+
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <strong>Security Questions</strong><br>
+            Set up security questions to help protect your account and enable password recovery. Choose questions with answers that are unique to you.
+          </div>
+
+          <label class="form-label">Security Question 1</label>
+          <select name="securityQuestion1" class="form-select" required>
+            <option value="">-- Select a question --</option>
+            <option value="What is the name of your first pet?">What is the name of your first pet?</option>
+            <option value="In what city were you born?">In what city were you born?</option>
+            <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+            <option value="What was the name of your elementary school?">What was the name of your elementary school?</option>
+            <option value="What is your favorite movie character?">What is your favorite movie character?</option>
+            <option value="What brand was your first car?">What brand was your first car?</option>
+            <option value="What is the name of your best friend in high school?">What is the name of your best friend in high school?</option>
+            <option value="What was your childhood nickname?">What was your childhood nickname?</option>
+          </select>
+
+          <label class="form-label mt-3">Your Answer</label>
+          <input type="text" name="securityAnswer1" placeholder="Answer to question 1" class="form-control" required>
+
+          <label class="form-label mt-3">Security Question 2</label>
+          <select name="securityQuestion2" class="form-select" required>
+            <option value="">-- Select a question --</option>
+            <option value="What is the name of your first pet?">What is the name of your first pet?</option>
+            <option value="In what city were you born?">In what city were you born?</option>
+            <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+            <option value="What was the name of your elementary school?">What was the name of your elementary school?</option>
+            <option value="What is your favorite movie character?">What is your favorite movie character?</option>
+            <option value="What brand was your first car?">What brand was your first car?</option>
+            <option value="What is the name of your best friend in high school?">What is the name of your best friend in high school?</option>
+            <option value="What was your childhood nickname?">What was your childhood nickname?</option>
+          </select>
+
+          <label class="form-label mt-3">Your Answer</label>
+          <input type="text" name="securityAnswer2" placeholder="Answer to question 2" class="form-control" required>
+
+          <label class="form-label mt-3">Current Password (for verification)</label>
+          <input type="password" name="password_verify" placeholder="Enter your password" class="form-control" required>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Set Up Security Questions</button>
         </div>
 
       </form>
