@@ -89,10 +89,6 @@ module.exports = async function validateAccountEdit(req, res, next) {
             }
         }
 
-        console.log(securityQn1_q)
-        console.log(securityQn1_a)
-        console.log(securityQn2_q)
-        console.log(securityQn2_a)
         if (req.body.action === "change_security_qns") {
             // for all security question related entries
             // if you set one, you have to set all
@@ -102,6 +98,10 @@ module.exports = async function validateAccountEdit(req, res, next) {
             }
             if (securityQn1_q == securityQn2_q) {
                 renderObject.message_warning = "Please select different security questions.";
+                return res.render("edit-user", renderObject);
+            }
+            if (securityQn1_a.length < 2 || securityQn2_a.length < 2 || securityQn1_a.length > 128 || securityQn2_a.length > 128) {
+                renderObject.message_warning = "Answers for security questions have to be between 2 and 128 characters long.";
                 return res.render("edit-user", renderObject);
             }
             if (securityQn1_a == securityQn2_a) {
