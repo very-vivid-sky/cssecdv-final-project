@@ -1,4 +1,5 @@
 const auditLogger = require('../middleware/auditLogger.js');
+const authMiddleware = require("./authMiddleware.js");
 const validReg = require('../middleware/validation/validateRegister.js');
 const validLogin = require('../middleware/validation/validateLogin.js');
 const validEditProfile = require('../middleware/validation/validateAccountEdit.js');
@@ -141,95 +142,97 @@ const userController = {
         image: user.userPicture,
         userId: user._id,
         clientType: helper.getClientType(req),
+        securityQuestions: authMiddleware.securityQuestions,
       });
     });
   },
 
 
- editUser_post: async (req, resp) => {
-  helper.validateAccess("user", req, async (isValid, user) => {
-    if (!isValid) return helper.get403Page(req, resp);
+  editUser_post: async (req, resp) => {
+    helper.validateAccess("user", req, async (isValid, user) => {
+      if (!isValid) return helper.get403Page(req, resp);
 
-    const body = req.body;
-    const action = body.action;
+      const body = req.body;
+      const action = body.action;
 
-    if (body.username) user.userName = body.username;
-    if (body.bio) user.userDetails = body.bio;
-    if (req.file) user.userPicture = req.file.filename;
-
-    let updated = false;
-
-    if (action === "change_username") {
-      const correct = await bcrypt.compare(body.password_old, user.password);
-      if (!correct) {
-        return resp.render("edit-user", {
-          layout: "index",
-            title: "Profile",
-            userName: user.userName,
-            joined: user.createdAt.toDateString(),
-            totalReviews: user.totalReviews,
-            bio: user.userDetails,
-            image: user.userPicture,
-            userId: user._id,
-            clientType: helper.getClientType(req),
-          message_warning: "Current password is incorrect."
-        });
+      // object for resp.render
+      let renderObject = {
+              layout: "index",
+              title: "Profile",
+              userName: user.userName,
+              joined: user.createdAt.toDateString(),
+              totalReviews: user.totalReviews,
+              bio: user.userDetails,
+              image: user.userPicture,
+              userId: user._id,
+              clientType: helper.getClientType(req),
+              securityQuestions: authMiddleware.securityQuestions,
       }
 
-      user.userName = body.username;
-      updated = true;
-    }
-
-     if (action === "change_password") {
-      const correct = await bcrypt.compare(body.password_old, user.password);
-      if (!correct) {
-        return resp.render("edit-user", {
-          layout: "index",
-            title: "Profile",
-            userName: user.userName,
-            joined: user.createdAt.toDateString(),
-            totalReviews: user.totalReviews,
-            bio: user.userDetails,
-            image: user.userPicture,
-            userId: user._id,
-            clientType: helper.getClientType(req),
-          message_warning: "Current password is incorrect."
-        });
-      }
-
-    if (!user.oldPasswords) user.oldPasswords = [];
-    user.oldPasswords.push(user.password);
-    if (user.oldPasswords.length > 5) user.oldPasswords.shift();
-
-      const salt = await bcrypt.genSalt(saltRounds);
-      user.password = await bcrypt.hash(body.password_new, salt);
-      user.passwordLastChanged = new Date();
-      updated = true;
-    }
-
-     if (action === undefined) {
-      if (req.file) user.userPicture = req.file.filename;
+      if (body.username) user.userName = body.username;
       if (body.bio) user.userDetails = body.bio;
-      updated = true;
-    }
+      if (req.file) user.userPicture = req.file.filename;
 
-     if (updated) await user.save();
+      let updated = false;
 
+      if (action === "change_username") {
+        const correct = await bcrypt.compare(body.password_old, user.password);
+        if (!correct) {
+          renderObject.message_warning = "Current password is incorrect."
+          return resp.render("edit-user", renderObject);
+        }
 
-    return resp.render("edit-user", {
-      layout: "index",
-      title: "Profile",
-      userName: user.userName,
-      joined: user.createdAt.toDateString(),
-      totalReviews: user.totalReviews,
-      bio: user.userDetails,
-      image: user.userPicture,
-      userId: user._id,
-      clientType: helper.getClientType(req),
-      message_success: "Profile updated successfully!"
+        user.userName = body.username;
+        updated = true;
+      }
+
+      else if (action === "change_password") {
+      const correct = await bcrypt.compare(body.password_old, user.password);
+        if (!correct) {
+          renderObject.message_warning = "Current password is incorrect."
+          return resp.render("edit-user", renderObject);
+        }
+
+        if (!user.oldPasswords) user.oldPasswords = [];
+        user.oldPasswords.push(user.password);
+        if (user.oldPasswords.length > 5) user.oldPasswords.shift();
+
+        const salt = await bcrypt.genSalt(saltRounds);
+        user.password = await bcrypt.hash(body.password_new, salt);
+        user.passwordLastChanged = new Date();
+        updated = true;
+      }
+
+      else if (action === "change_security_qns") {
+        const correct = await bcrypt.compare(body.password_old, user.password);
+        if (!correct) {
+          renderObject.message_warning = "Current password is incorrect."
+          return resp.render("edit-user", renderObject);
+        }
+
+        // they're pretty much backup passwords, should encrypt them
+        let hashedA1 = await authMiddleware.encryptPassword(body.securityQn1_a);
+        let hashedA2 = await authMiddleware.encryptPassword(body.securityQn2_a);
+        user.securityQuestions = {
+          first: { question: body.securityQn1_q, answer: hashedA1 },
+          second: { question: body.securityQn2_q, answer: hashedA2 },
+        }
+
+        updated = true;
+      }
+
+      else if (action === undefined) {
+        if (req.file) user.userPicture = req.file.filename;
+        if (body.bio) user.userDetails = body.bio;
+        updated = true;
+      }
+
+      if (updated) await user.save();
+
+      renderObject.message_success = "Profile updated successfully!"
+      return resp.render("edit-user", renderObject);
     });
-  });
-},
+  },
 
   clientDetails_get: async (req, resp) => {
     const { id } = req.params;
