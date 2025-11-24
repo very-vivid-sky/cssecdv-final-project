@@ -19,3 +19,7 @@ hello3dfsdf!
 cy@test.com
 correct horse battery staple
 $2b$05$cZbh.kPBW4v8F7NPOsqBCu230LXwz8khBwXL0DAUSCgIPZla.TaNu
+
+cy@test.com (alternate)
+helloWorld&1
+$2a$05$D7p6HiX1okN1uqvvXHJ5XOZntcOE2ayM5RdCkdhfNPf21mGa408P.

@@ -4,10 +4,12 @@
     <div>
       <h1>Log In</h1>
     </div>
-     {{#if message}}
-      <div class="alert alert-danger" role="alert"><strong>{{message}}</strong>
-      </div>
-      {{/if}}
+    {{#if message_success}}
+    <div class="row alert alert-success" role="alert">{{message_success}}</div>
+    {{/if}}
+    {{#if message_warning}}
+    <div class="row alert alert-danger" role="alert"><strong>{{message_warning}}</strong></div>
+    {{/if}}
 
     <div class="my-2 mx-3">
       <form id="login" name="login" class="form vstack login-form gap-1" action="/login" method="POST">

@@ -12,6 +12,7 @@ const { isAdmin, isAccountActive, isManager, isStrictManager, isLoggedIn } = req
 const helper = require("../controllers/controllerHelper.js")
 const { checkAccountLockout } = require('../middleware/accountLockoutMiddleware.js');
 const validateRegister = require('../middleware/validation/validateRegister.js');
+const validateResetPassword = require('../middleware/validation/validateResetPassword.js');
 const validateLogin = require('../middleware/validation/validateLogin.js');
 const validateAccountEdit = require('../middleware/validation/validateAccountEdit.js');
 const validateReview = require('../middleware/validation/validateReview.js');
@@ -77,6 +78,8 @@ app.post('/register',
 app.get('/login',userController.login_get);
 // app.post('/login',sessionController.login);
 app.post('/login', validateLogin, checkAccountLockout, sessionController.login);
+app.get("/resetpassword", userController.resetPassword_get);
+app.post("/resetpassword", validateResetPassword, userController.resetPassword_post);
 app.get('/user/:id', userController.clientDetails_get);
 app.get('/userdetails/', isLoggedIn, userController.editUser_get);
 app.post(

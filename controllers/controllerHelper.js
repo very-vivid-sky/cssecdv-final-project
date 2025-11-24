@@ -76,18 +76,7 @@ const helper = {
 		let search = {};
 		search[key] = val;
 		let res = undefined;
-		/*
-		await User.findOne(search).then(async function(res) {
-			if (fn != null) {
-				fn(res);
-			}
-			return res;
-		})
-		.catch((error) => {
-			// throw up
-			throw(error);
-		});
-		*/
+		
 		await User.findOne(search).then(async function(found) {
 			if (fn != null) { await fn(found) }
 			res = found;

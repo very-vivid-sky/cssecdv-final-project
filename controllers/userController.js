@@ -304,6 +304,119 @@ const userController = {
       return resp.status(500).send({ message: error.message });
     }
   },
+
+
+  
+  // renders the base reset password screen
+  resetPassword_get: async (req, resp) => {
+    if (helper.isLoggedIn(req)) return helper.get403Page(req, resp);
+
+    return resp.render('reset-password', {
+      layout: 'index',
+      title: "Reset password",
+      step: "identify",
+    });
+  },
+
+  // handles all the logic for post requests to resetPassword
+  resetPassword_post: async(req, resp) => {
+    if (req.body.step == "identify") {
+      // identify step — get the email if it exists and send the associated recovery questions
+      let user = await helper.getUserFromData("userEmail", req.body.email);
+      if (
+        user == undefined || user.securityQuestions == undefined ||
+        user.securityQuestions.first.question == null || user.securityQuestions.second.question == null ||
+        user.securityQuestions.first.answer == null || user.securityQuestions.second.answer == null
+      ) {
+        // no email /or/ no security questions — display the same error msg
+        return resp.render('reset-password', {
+          layout: 'index',
+          title: "Reset password",
+          step: "identify",
+          message_warning: "Cannot get security questions associated with this email; potentially because it is not registered or no security questions have been attached to it. If this is your account, please notify an admin to restore your account access.",
+        });
+      } else {
+        // email + security questions found — move on to the next step
+        return resp.render('reset-password', {
+          layout: 'index',
+          title: "Reset password",
+          step: "verify",
+          email: req.body.email,
+          securityQuestion1: user.securityQuestions.first.question,
+          securityQuestion2: user.securityQuestions.second.question,
+        });
+      }
+    } else if (req.body.step == "verify") {
+      // verify step — confirm that the answers given to each security question are correct; only then should we change the password
+      let user = await helper.getUserFromData("userEmail", req.body.email);
+      if (
+        user == undefined || user.securityQuestions == undefined ||
+        user.securityQuestions.first.question == null || user.securityQuestions.second.question == null ||
+        user.securityQuestions.first.answer == null || user.securityQuestions.second.answer == null
+      ) {
+        // previous step should catch such errors, but just in case!
+        return resp.render('reset-password', {
+          layout: 'index',
+          title: "Reset password",
+          step: "identify",
+          message_warning: "An unexpected error occured while processing your request. Please try again.",
+        });
+      } else {
+        // obtained security questions
+        let correct1 = await authMiddleware.comparePassword(req.body.answer1, user.securityQuestions.first.answer);
+        let correct2 = await authMiddleware.comparePassword(req.body.answer2, user.securityQuestions.second.answer);
+        if (!correct1 || !correct2) {
+          // one of them are not correct! deny
+          return resp.render("reset-password", {
+            layout: "index",
+            title: "Reset password",
+            step: "verify",
+            email: req.body.email,
+            securityQuestion1: req.body.question1,
+            securityQuestion2: req.body.question2,
+            message_warning: "One or both of the answers to the security questions were not correct. Please try again."
+          });
+        } else {
+          // one last verification: has this password been used before?
+          let wasPasswordReused = await authMiddleware.checkForPasswordReuse(user, req.body.newPassword);
+          if (wasPasswordReused) {
+            // it was! deny
+            return resp.render("reset-password", {
+              layout: "index",
+              title: "Reset password",
+              step: "verify",
+              email: req.body.email,
+              securityQuestion1: req.body.question1,
+              securityQuestion2: req.body.question2,
+              message_warning: "Unable to set your password. Try another password."
+            })
+          } else {
+            // it wasn't! set this password
+            if (!user.oldPasswords) user.oldPasswords = [];
+            user.oldPasswords.push(user.password);
+            if (user.oldPasswords.length > 5) user.oldPasswords.shift();
+
+            let hashedPassword = await authMiddleware.encryptPassword(req.body.newPassword);
+            user.password = hashedPassword;
+            user.save();
+
+            return resp.render("login", {
+              layout: "index",
+              title: "Login",
+              message_success: "Password reset! You may now login using this password."
+            });
+          }
+        }
+      }
+    } else {
+      return resp.render('reset-password', {
+        layout: 'index',
+        title: "Reset password",
+        step: "identify",
+        message_warning: "An unexpected error occured while processing your request. Please try again.",
+      });
+    }
+  }
 };
 
 module.exports = userController;
