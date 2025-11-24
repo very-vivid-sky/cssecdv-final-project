@@ -72,7 +72,7 @@ app.get('/register',userController.registerUser_get);
 //app.post('/register',upload.single("avatar"), userController.registerUser_post);
 app.post('/register',
     upload.single("avatar"),   
-    validateRegister,          
+    validateRegister,      
     userController.registerUser_post 
 );
 app.get('/login',userController.login_get);

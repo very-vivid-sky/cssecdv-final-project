@@ -89,7 +89,11 @@ module.exports = async function validateAccountEdit(req, res, next) {
             }
         }
 
-        if (securityQn1_q != "unset" || securityQn1_a != "" || securityQn2_a != "unset" || securityQn2_a != "") {
+        console.log(securityQn1_q)
+        console.log(securityQn1_a)
+        console.log(securityQn2_q)
+        console.log(securityQn2_a)
+        if (req.body.action === "change_security_qns") {
             // for all security question related entries
             // if you set one, you have to set all
             if (securityQn1_q == "unset" || securityQn1_a == "" || securityQn2_a == "unset" || securityQn2_a == "") {
