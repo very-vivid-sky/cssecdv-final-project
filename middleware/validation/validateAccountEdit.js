@@ -83,7 +83,7 @@ module.exports = async function validateAccountEdit(req, res, next) {
             }
 
             if (!validatePassword(password_new)) {
-                renderObject.message_warning = "New password must meet complexity requirements.";
+                renderObject.message_warning = "New password should be at least 8 characters, contain uppercase, lowercase letters, a number, and a special character.";
                 return res.render("edit-user", renderObject);
             }
 
