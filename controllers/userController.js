@@ -28,6 +28,10 @@ const userController = {
     const password = body.password || "";
     const username = body.username?.trim() || "";
     const bio = body.bio || "";
+    const securityQuestion1 = body.securityQuestion1?.trim() || "";
+    const securityAnswer1 = body.securityAnswer1?.trim() || "";
+    const securityQuestion2 = body.securityQuestion2?.trim() || "";
+    const securityAnswer2 = body.securityAnswer2?.trim() || "";
 
     try {
         bcrypt.genSalt(saltRounds, (err, salt) => {
@@ -51,13 +55,21 @@ const userController = {
                 }
 
                 try {
+                    // Hash security question answers
+                    const hashedAnswer1 = await bcrypt.hash(securityAnswer1.toLowerCase(), salt);
+                    const hashedAnswer2 = await bcrypt.hash(securityAnswer2.toLowerCase(), salt);
+
                     const user = new User({
                         userName: username,
                         userEmail: email,
                         password: hashedPass,
                         userDetails: bio || "",
                         clientType: "user",
-                        userPicture: req.file ? req.file.filename : null
+                        userPicture: req.file ? req.file.filename : null,
+                        securityQuestions: [
+                            { question: securityQuestion1, answerHash: hashedAnswer1 },
+                            { question: securityQuestion2, answerHash: hashedAnswer2 }
+                        ]
                     });
 
                     await user.save();
@@ -80,7 +92,7 @@ const userController = {
 
                     if (auditLogger?.logAuditEvent) {
                         await auditLogger.logAuditEvent(
-                            "REGISTRATION",
+                            "REGISTRATION_FAILED",
                             "failure",
                             {
                                 userId: email,
@@ -132,6 +144,10 @@ const userController = {
       if (!isValid) {
         return helper.get403Page(req, resp);
       }
+      
+      // Check if user has security questions set up
+      const noSecurityQuestions = !user.securityQuestions || user.securityQuestions.length === 0;
+      
       return resp.status(200).render('edit-user', {
         layout: 'index',
         title: "Profile",
@@ -183,6 +199,7 @@ const userController = {
         }
 
         user.userName = body.username;
+        renderObject.userName = body.username;
         updated = true;
       }
 
@@ -223,7 +240,7 @@ const userController = {
 
       else if (action === undefined) {
         if (req.file) user.userPicture = req.file.filename;
-        if (body.bio) user.userDetails = body.bio;
+        if (body.bio) { user.userDetails = body.bio; renderObject.bio = body.bio; };
         updated = true;
       }
 
@@ -289,7 +306,7 @@ const userController = {
               title: user.userName,
               totalReviews,
               joined: user.createdAt,
-              images: helper.getPfp(user),
+              //images: helper.getPfp(user),
               userName: user.userName,
               clientType: helper.getClientType(req),
               reviews,
