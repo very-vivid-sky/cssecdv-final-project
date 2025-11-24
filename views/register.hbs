@@ -21,8 +21,45 @@
         <input type="password" id="retype-password" placeholder="Retype password" class="form-control" required
           name=password2>
         <input type="text" name="bio" class="form-control" id="bio" placeholder="Enter Short Description (optional)" maxlength="160">
+        
+        <hr class="my-3">
+        <h5>Security Questions (for password reset)</h5>
+        <small class="text-muted">These questions help you reset your password if needed. Choose questions with answers that are sufficiently unique to you.</small>
+        
+        <label class="form-label mt-3" for="securityQuestion1">Security Question 1</label>
+        <select name="securityQuestion1" id="securityQuestion1" class="form-select" required>
+          <option value="">-- Select a question --</option>
+          <option value="What is the name of your first pet?">What is the name of your first pet?</option>
+          <option value="In what city were you born?">In what city were you born?</option>
+          <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+          <option value="What was the name of your elementary school?">What was the name of your elementary school?</option>
+          <option value="What is your favorite movie character?">What is your favorite movie character?</option>
+          <option value="What brand was your first car?">What brand was your first car?</option>
+          <option value="What is the name of your best friend in high school?">What is the name of your best friend in high school?</option>
+          <option value="What was your childhood nickname?">What was your childhood nickname?</option>
+        </select>
+        
+        <label class="form-label mt-2" for="securityAnswer1">Your Answer</label>
+        <input type="text" name="securityAnswer1" id="securityAnswer1" placeholder="Answer to question 1" class="form-control" required>
+        
+        <label class="form-label mt-3" for="securityQuestion2">Security Question 2</label>
+        <select name="securityQuestion2" id="securityQuestion2" class="form-select" required>
+          <option value="">-- Select a question --</option>
+          <option value="What is the name of your first pet?">What is the name of your first pet?</option>
+          <option value="In what city were you born?">In what city were you born?</option>
+          <option value="What is your mother's maiden name?">What is your mother's maiden name?</option>
+          <option value="What was the name of your elementary school?">What was the name of your elementary school?</option>
+          <option value="What is your favorite movie character?">What is your favorite movie character?</option>
+          <option value="What brand was your first car?">What brand was your first car?</option>
+          <option value="What is the name of your best friend in high school?">What is the name of your best friend in high school?</option>
+          <option value="What was your childhood nickname?">What was your childhood nickname?</option>
+        </select>
+        
+        <label class="form-label mt-2" for="securityAnswer2">Your Answer</label>
+        <input type="text" name="securityAnswer2" id="securityAnswer2" placeholder="Answer to question 2" class="form-control" required>
+        
         <div>
-          <label class="form-label mb-0 mt-1 mx-3" for="customFile">Upload Avatar Picture (optional):</label>
+          <label class="form-label mb-0 mt-3 mx-3" for="customFile">Upload Avatar Picture (optional):</label>
           <input type="file" name="avatar" class="form-control" id="avatar" accept="image/png,image/jpeg" />
         </div>
         <a href='login.html'>

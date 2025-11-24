@@ -11,6 +11,14 @@
     {{> guestheader}}
 {{/if}}
 
+{{#if lastUseMessage}}
+  <div class="container mt-3">
+    <div class="alert alert-info" role="alert">
+      {{lastUseMessage}}
+    </div>
+  </div>
+{{/if}}
+
 
 <div class="d-flex flex-column min-vh-100">
   <div class="index container">

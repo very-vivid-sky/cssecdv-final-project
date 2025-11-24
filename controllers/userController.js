@@ -4,6 +4,7 @@ const validLogin = require('../middleware/validation/validateLogin.js');
 const validEditProfile = require('../middleware/validation/validateAccountEdit.js');
 const express = require('express');
 const helper = require('./controllerHelper.js');
+const authMiddleware = require('./authMiddleware.js');
 const User = require('../models/userSchema.js');
 const bcrypt = require('bcryptjs');
 const saltRounds = 5;
@@ -27,6 +28,10 @@ const userController = {
     const password = body.password || "";
     const username = body.username?.trim() || "";
     const bio = body.bio || "";
+    const securityQuestion1 = body.securityQuestion1?.trim() || "";
+    const securityAnswer1 = body.securityAnswer1?.trim() || "";
+    const securityQuestion2 = body.securityQuestion2?.trim() || "";
+    const securityAnswer2 = body.securityAnswer2?.trim() || "";
 
     try {
         bcrypt.genSalt(saltRounds, (err, salt) => {
@@ -50,13 +55,21 @@ const userController = {
                 }
 
                 try {
+                    // Hash security question answers
+                    const hashedAnswer1 = await bcrypt.hash(securityAnswer1.toLowerCase(), salt);
+                    const hashedAnswer2 = await bcrypt.hash(securityAnswer2.toLowerCase(), salt);
+
                     const user = new User({
                         userName: username,
                         userEmail: email,
                         password: hashedPass,
                         userDetails: bio || "",
                         clientType: "user",
-                        userPicture: req.file ? req.file.filename : null
+                        userPicture: req.file ? req.file.filename : null,
+                        securityQuestions: [
+                            { question: securityQuestion1, answerHash: hashedAnswer1 },
+                            { question: securityQuestion2, answerHash: hashedAnswer2 }
+                        ]
                     });
 
                     await user.save();
@@ -131,6 +144,10 @@ const userController = {
       if (!isValid) {
         return helper.get403Page(req, resp);
       }
+      
+      // Check if user has security questions set up
+      const noSecurityQuestions = !user.securityQuestions || user.securityQuestions.length === 0;
+      
       return resp.status(200).render('edit-user', {
         layout: 'index',
         title: "Profile",
@@ -141,6 +158,7 @@ const userController = {
         image: user.userPicture,
         userId: user._id,
         clientType: helper.getClientType(req),
+        noSecurityQuestions: noSecurityQuestions
       });
     });
   },
@@ -172,6 +190,7 @@ const userController = {
             image: user.userPicture,
             userId: user._id,
             clientType: helper.getClientType(req),
+            noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
           message_warning: "Current password is incorrect."
         });
       }
@@ -193,6 +212,7 @@ const userController = {
             image: user.userPicture,
             userId: user._id,
             clientType: helper.getClientType(req),
+            noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
           message_warning: "Current password is incorrect."
         });
       }
@@ -207,6 +227,109 @@ const userController = {
       updated = true;
     }
 
+    if (action === "setup_security_questions") {
+      const q1 = body.securityQuestion1?.trim();
+      const a1 = body.securityAnswer1?.trim();
+      const q2 = body.securityQuestion2?.trim();
+      const a2 = body.securityAnswer2?.trim();
+      const verifyPassword = body.password_verify;
+
+      // Verify password
+      const correct = await bcrypt.compare(verifyPassword, user.password);
+      if (!correct) {
+        return resp.render("edit-user", {
+          layout: "index",
+          title: "Profile",
+          userName: user.userName,
+          joined: user.createdAt.toDateString(),
+          totalReviews: user.totalReviews,
+          bio: user.userDetails,
+          image: user.userPicture,
+          userId: user._id,
+          clientType: helper.getClientType(req),
+          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
+          message_warning: "Password verification failed."
+        });
+      }
+
+      // Validate questions and answers
+      if (!q1 || !q2 || q1 === q2) {
+        return resp.render("edit-user", {
+          layout: "index",
+          title: "Profile",
+          userName: user.userName,
+          joined: user.createdAt.toDateString(),
+          totalReviews: user.totalReviews,
+          bio: user.userDetails,
+          image: user.userPicture,
+          userId: user._id,
+          clientType: helper.getClientType(req),
+          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
+          message_warning: "Questions must be different."
+        });
+      }
+
+      if (!a1 || !a2 || a1.length < 2 || a2.length < 2 || a1.length > 100 || a2.length > 100) {
+        return resp.render("edit-user", {
+          layout: "index",
+          title: "Profile",
+          userName: user.userName,
+          joined: user.createdAt.toDateString(),
+          totalReviews: user.totalReviews,
+          bio: user.userDetails,
+          image: user.userPicture,
+          userId: user._id,
+          clientType: helper.getClientType(req),
+          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
+          message_warning: "Answers must be 2-100 characters."
+        });
+      }
+
+      if (a1.toLowerCase() === a2.toLowerCase()) {
+        return resp.render("edit-user", {
+          layout: "index",
+          title: "Profile",
+          userName: user.userName,
+          joined: user.createdAt.toDateString(),
+          totalReviews: user.totalReviews,
+          bio: user.userDetails,
+          image: user.userPicture,
+          userId: user._id,
+          clientType: helper.getClientType(req),
+          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
+          message_warning: "Answers must be different."
+        });
+      }
+
+      // Hash and store security questions
+      try {
+        const salt = await bcrypt.genSalt(saltRounds);
+        const hashedAnswer1 = await bcrypt.hash(a1.toLowerCase(), salt);
+        const hashedAnswer2 = await bcrypt.hash(a2.toLowerCase(), salt);
+
+        user.securityQuestions = [
+          { question: q1, answerHash: hashedAnswer1 },
+          { question: q2, answerHash: hashedAnswer2 }
+        ];
+        updated = true;
+      } catch (error) {
+        console.error('Error hashing security questions:', error);
+        return resp.render("edit-user", {
+          layout: "index",
+          title: "Profile",
+          userName: user.userName,
+          joined: user.createdAt.toDateString(),
+          totalReviews: user.totalReviews,
+          bio: user.userDetails,
+          image: user.userPicture,
+          userId: user._id,
+          clientType: helper.getClientType(req),
+          noSecurityQuestions: !user.securityQuestions || user.securityQuestions.length === 0,
+          message_warning: "An error occurred while setting up security questions."
+        });
+      }
+    }
+
      if (action === undefined) {
       if (req.file) user.userPicture = req.file.filename;
       if (body.bio) user.userDetails = body.bio;
@@ -215,6 +338,7 @@ const userController = {
 
      if (updated) await user.save();
 
+    const noSecurityQuestions = !user.securityQuestions || user.securityQuestions.length === 0;
 
     return resp.render("edit-user", {
       layout: "index",
@@ -226,6 +350,7 @@ const userController = {
       image: user.userPicture,
       userId: user._id,
       clientType: helper.getClientType(req),
+      noSecurityQuestions: noSecurityQuestions,
       message_success: "Profile updated successfully!"
     });
   });
@@ -300,6 +425,226 @@ const userController = {
       console.log(error);
       return resp.status(500).send({ message: error.message });
     }
+  },
+
+  resetPassword_get: async (req, resp) => {
+    // GET /reset-password - show the password reset form
+    if (helper.isLoggedIn(req)) return helper.get403Page(req, resp);
+
+    return resp.render('reset-password', {
+      layout: 'index',
+      title: 'Reset Password',
+      step: 'identify'
+    });
+  },
+
+  resetPassword_post: async (req, resp) => {
+    // POST /reset-password - verify security questions and allow password change
+    if (helper.isLoggedIn(req)) return helper.get403Page(req, resp);
+
+    const { email, step } = req.body;
+
+    if (!email) {
+      return resp.render('reset-password', {
+        layout: 'index',
+        title: 'Reset Password',
+        step: 'identify',
+        message: 'Email is required.'
+      });
+    }
+
+    // Step 1: User provides email, return security questions
+    if (step === 'identify') {
+      try {
+        const user = await helper.getUserFromData('userEmail', email.trim());
+        if (!user) {
+          // Generic message to prevent email enumeration
+          return resp.render('reset-password', {
+            layout: 'index',
+            title: 'Reset Password',
+            step: 'identify',
+            message: 'If this account exists, you will be able to reset your password.'
+          });
+        }
+
+        // Store email in session (temporary) for verification step
+        req.session.resetEmail = email.trim();
+        req.session.resetUserId = user._id.toString();
+
+        // Render the security questions
+        return resp.render('reset-password', {
+          layout: 'index',
+          title: 'Reset Password',
+          step: 'verify',
+          questions: user.securityQuestions || [],
+          email: email.trim()
+        });
+      } catch (error) {
+        console.error('Reset password email lookup error:', error);
+        return resp.status(500).render('reset-password', {
+          layout: 'index',
+          title: 'Reset Password',
+          step: 'identify',
+          message: 'An error occurred. Please try again.'
+        });
+      }
+    }
+
+    // Step 2: User answers security questions and provides new password
+    if (step === 'verify') {
+      try {
+        const userId = req.session.resetUserId;
+        const resetEmail = req.session.resetEmail;
+        const answer1 = req.body.answer1?.trim() || '';
+        const answer2 = req.body.answer2?.trim() || '';
+        const newPassword = req.body.newPassword || '';
+        const confirmPassword = req.body.confirmPassword || '';
+
+        if (!userId || !resetEmail) {
+          return resp.render('reset-password', {
+            layout: 'index',
+            title: 'Reset Password',
+            step: 'identify',
+            message: 'Session expired. Please start over.'
+          });
+        }
+
+        // Fetch user
+        const user = await User.findById(userId);
+        if (!user) {
+          return resp.render('reset-password', {
+            layout: 'index',
+            title: 'Reset Password',
+            step: 'identify',
+            message: 'User not found.'
+          });
+        }
+
+        // Verify answers to security questions
+        let correctAnswers = 0;
+        if (user.securityQuestions && user.securityQuestions.length >= 2) {
+          const match1 = await bcrypt.compare(answer1.toLowerCase(), user.securityQuestions[0].answerHash);
+          const match2 = await bcrypt.compare(answer2.toLowerCase(), user.securityQuestions[1].answerHash);
+          if (match1) correctAnswers++;
+          if (match2) correctAnswers++;
+        }
+
+        // Require both questions answered correctly
+        if (correctAnswers !== 2) {
+          return resp.render('reset-password', {
+            layout: 'index',
+            title: 'Reset Password',
+            step: 'verify',
+            questions: user.securityQuestions || [],
+            email: resetEmail,
+            message: 'One or more security question answers are incorrect.'
+          });
+        }
+
+        // Validate new password
+        if (!authMiddleware.validatePassword(newPassword)) {
+          return resp.render('reset-password', {
+            layout: 'index',
+            title: 'Reset Password',
+            step: 'verify',
+            questions: user.securityQuestions || [],
+            email: resetEmail,
+            message: 'Password must be at least 8 characters, contain uppercase, lowercase letters, a number, and a special character.'
+          });
+        }
+
+        // Check passwords match
+        if (newPassword !== confirmPassword) {
+          return resp.render('reset-password', {
+            layout: 'index',
+            title: 'Reset Password',
+            step: 'verify',
+            questions: user.securityQuestions || [],
+            email: resetEmail,
+            message: 'Passwords do not match.'
+          });
+        }
+
+        // Check for password reuse
+        const isReused = await authMiddleware.checkForPasswordReuse(user, newPassword);
+        if (isReused) {
+          return resp.render('reset-password', {
+            layout: 'index',
+            title: 'Reset Password',
+            step: 'verify',
+            questions: user.securityQuestions || [],
+            email: resetEmail,
+            message: 'This password has been used before. Please choose a different password.'
+          });
+        }
+
+        // Set new password
+        try {
+          const salt = await bcrypt.genSalt(saltRounds);
+          const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+          // Store old password in history
+          if (!user.oldPasswords) user.oldPasswords = [];
+          user.oldPasswords.push(user.password);
+          if (user.oldPasswords.length > 5) user.oldPasswords.shift();
+
+          user.password = hashedPassword;
+          user.passwordLastChanged = new Date();
+          await user.save();
+
+          // Log the password reset
+          try {
+            await auditLogger.logAuditEvent(
+              'PASSWORD_RESET_VIA_SECURITY_QUESTIONS',
+              'success',
+              {
+                userId: user._id,
+                resource: 'User',
+                ipAddress: req.auditContext?.ipAddress || 'UNKNOWN',
+                userAgent: req.auditContext?.userAgent || 'UNKNOWN',
+                details: { email: resetEmail }
+              }
+            );
+          } catch (e) { console.error('Failed to log password reset:', e); }
+
+          // Clear session
+          delete req.session.resetEmail;
+          delete req.session.resetUserId;
+
+          return resp.render('reset-password', {
+            layout: 'index',
+            title: 'Reset Password',
+            step: 'success',
+            email: resetEmail
+          });
+        } catch (error) {
+          console.error('Password update error:', error);
+          return resp.status(500).render('reset-password', {
+            layout: 'index',
+            title: 'Reset Password',
+            step: 'verify',
+            questions: user.securityQuestions || [],
+            email: resetEmail,
+            message: 'An error occurred while updating your password. Please try again.'
+          });
+        }
+      } catch (error) {
+        console.error('Reset password verification error:', error);
+        return resp.status(500).render('reset-password', {
+          layout: 'index',
+          title: 'Reset Password',
+          step: 'identify',
+          message: 'An error occurred. Please try again.'
+        });
+      }
+    }
+
+    return resp.status(400).render('reset-password', {
+      layout: 'index',
+      title: 'Reset Password',
+      step: 'identify',
+      message: 'Invalid request.'
+    });
   },
 };
 

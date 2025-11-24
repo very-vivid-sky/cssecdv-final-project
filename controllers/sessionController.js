@@ -54,6 +54,16 @@ const sessionController = {
             }
 
             if (user.isActive === false) {
+                try {
+                    user.lastAccess = {
+                        at: new Date(),
+                        success: false,
+                        ip: req.auditContext?.ipAddress || 'UNKNOWN',
+                        userAgent: req.auditContext?.userAgent || 'UNKNOWN',
+                        note: 'Account inactive'
+                    };
+                    await user.save();
+                } catch (e) { }
                 return resp.render('login', {
                     layout: 'index',
                     title: 'Login',
@@ -71,6 +81,17 @@ const sessionController = {
                         req.auditContext?.userAgent || 'UNKNOWN'
                     );
                 } catch { }
+
+                try {
+                    user.lastAccess = {
+                        at: new Date(),
+                        success: false,
+                        ip: req.auditContext?.ipAddress || 'UNKNOWN',
+                        userAgent: req.auditContext?.userAgent || 'UNKNOWN',
+                        note: 'Account locked'
+                    };
+                    await user.save();
+                } catch (e) { }
 
                 return resp.render('login', {
                     layout: 'index',
@@ -94,6 +115,17 @@ const sessionController = {
                     );
                 } catch { }
 
+                try {
+                    user.lastAccess = {
+                        at: new Date(),
+                        success: false,
+                        ip: req.auditContext?.ipAddress || 'UNKNOWN',
+                        userAgent: req.auditContext?.userAgent || 'UNKNOWN',
+                        note: 'Invalid password'
+                    };
+                    await user.save();
+                } catch (e) { }
+
                 return resp.render('login', {
                     layout: 'index',
                     title: 'Login',
@@ -111,6 +143,32 @@ const sessionController = {
                     req.auditContext?.userAgent || 'UNKNOWN'
                 );
             } catch { }
+
+            // Build last-use message from previous record (if any)
+            let prevLast = (user && user.lastAccess && user.lastAccess.at) ? user.lastAccess : null;
+
+            // Update stored lastAccess to this successful login
+            try {
+                user.lastAccess = {
+                    at: new Date(),
+                    success: true,
+                    ip: req.auditContext?.ipAddress || 'UNKNOWN',
+                    userAgent: req.auditContext?.userAgent || 'UNKNOWN',
+                    note: 'Successful login'
+                };
+                await user.save();
+            } catch (e) { console.error('Failed to save lastAccess:', e); }
+
+            // If we have a previous last-use, format a message and store in session for display
+            if (prevLast && prevLast.at) {
+                try {
+                    const when = helper.formatDateTime(new Date(prevLast.at));
+                    const status = (prevLast.success) ? 'successful' : 'unsuccessful';
+                    const note = prevLast.note ? ` (${prevLast.note})` : '';
+                    const ip = prevLast.ip || 'UNKNOWN';
+                    req.session.lastUseMessage = `Your last account use was ${when} from ${ip} and was ${status}${note}.`;
+                } catch (e) { req.session.lastUseMessage = null; }
+            }
 
             // Save session
             req.session.userId = user._id;
