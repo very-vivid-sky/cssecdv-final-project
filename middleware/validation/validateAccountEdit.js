@@ -45,6 +45,15 @@ module.exports = async function validateAccountEdit(req, res, next) {
 
             const correct = await bcrypt.compare(password_old, user.password);
             if (!correct) {
+                await auditLogger.logAccessDenied(
+                  auditLogger.getUser(req),
+                  "User",
+                  user._id,
+                  auditLogger.getIp(req),
+                  auditLogger.getUa(req),
+                  `Edit profile (${req.body.action}), incorrect password`
+                )
+
                 renderObject.message_warning = "Current password is incorrect.";
                 return res.render("edit-user", renderObject);
             }
