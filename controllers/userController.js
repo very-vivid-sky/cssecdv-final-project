@@ -194,6 +194,15 @@ const userController = {
       if (action === "change_username") {
         const correct = await bcrypt.compare(body.password_old, user.password);
         if (!correct) {
+          await auditLogger.logAccessDenied(
+            auditLogger.getUser(req),
+            "User",
+            user._id,
+            auditLogger.getIp(req),
+            auditLogger.getUa(req),
+            `Edit profile (${action}), incorrect password`
+          )
+
           renderObject.message_warning = "Current password is incorrect."
           return resp.render("edit-user", renderObject);
         }
@@ -201,11 +210,28 @@ const userController = {
         user.userName = body.username;
         renderObject.userName = body.username;
         updated = true;
+
+        await auditLogger.logDetailsEdit(
+          auditLogger.getUser(req),
+          "Username",
+          user._id,
+          auditLogger.getIp(req),
+          auditLogger.getUa(req),
+        )
+
       }
 
       else if (action === "change_password") {
       const correct = await bcrypt.compare(body.password_old, user.password);
         if (!correct) {
+          await auditLogger.logAccessDenied(
+            auditLogger.getUser(req),
+            "User",
+            user._id,
+            auditLogger.getIp(req),
+            auditLogger.getUa(req),
+            `Edit profile (${action}), incorrect password`
+          )
           renderObject.message_warning = "Current password is incorrect."
           return resp.render("edit-user", renderObject);
         }
@@ -218,11 +244,28 @@ const userController = {
         user.password = await bcrypt.hash(body.password_new, salt);
         user.passwordLastChanged = new Date();
         updated = true;
+
+        await auditLogger.logDetailsEdit(
+          auditLogger.getUser(req),
+          "Password",
+          user._id,
+          auditLogger.getIp(req),
+          auditLogger.getUa(req),
+        )
+
       }
 
       else if (action === "change_security_qns") {
         const correct = await bcrypt.compare(body.password_old, user.password);
         if (!correct) {
+          await auditLogger.logAccessDenied(
+            auditLogger.getUser(req),
+            "User",
+            user._id,
+            auditLogger.getIp(req),
+            auditLogger.getUa(req),
+            `Edit profile (${action}), incorrect password`
+          )
           renderObject.message_warning = "Current password is incorrect."
           return resp.render("edit-user", renderObject);
         }
@@ -235,6 +278,14 @@ const userController = {
           second: { question: body.securityQn2_q, answer: hashedA2 },
         }
 
+        await auditLogger.logDetailsEdit(
+          auditLogger.getUser(req),
+          "SecurityQuestions",
+          user._id,
+          auditLogger.getIp(req),
+          auditLogger.getUa(req),
+        )
+
         updated = true;
       }
 
@@ -242,6 +293,15 @@ const userController = {
         if (req.file) user.userPicture = req.file.filename;
         if (body.bio) { user.userDetails = body.bio; renderObject.bio = body.bio; };
         updated = true;
+
+        await auditLogger.logDetailsEdit(
+          auditLogger.getUser(req),
+          "PublicProfile",
+          user._id,
+          auditLogger.getIp(req),
+          auditLogger.getUa(req),
+        )
+
       }
 
       if (updated) await user.save();
@@ -384,6 +444,16 @@ const userController = {
         let correct2 = await authMiddleware.comparePassword(req.body.answer2, user.securityQuestions.second.answer);
         if (!correct1 || !correct2) {
           // one of them are not correct! deny
+
+          await auditLogger.logAccessDenied(
+            auditLogger.getUser(req),
+            "User",
+            user._id,
+            auditLogger.getIp(req),
+            auditLogger.getUa(req),
+            "Reset password attempt, incorrect security questions"
+          )
+
           return resp.render("reset-password", {
             layout: "index",
             title: "Reset password",
@@ -396,6 +466,7 @@ const userController = {
         } else {
           // one last verification: has this password been used before?
           let wasPasswordReused = await authMiddleware.checkForPasswordReuse(user, req.body.newPassword);
+
           if (wasPasswordReused) {
             // it was! deny
             return resp.render("reset-password", {
@@ -416,6 +487,14 @@ const userController = {
             let hashedPassword = await authMiddleware.encryptPassword(req.body.newPassword);
             user.password = hashedPassword;
             user.save();
+
+            await auditLogger.logDetailsEdit(
+              auditLogger.getUser(req),
+              "Password",
+              user._id,
+              auditLogger.getIp(req),
+              auditLogger.getUa(req),
+            )
 
             return resp.render("login", {
               layout: "index",

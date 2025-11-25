@@ -150,15 +150,17 @@ const logValidationFailure = async (userId, resource, failureReason, ipAddress, 
 
  // Log password change
  
- const logPasswordChange = async (userId, ipAddress, userAgent) => {
+ const logDetailsEdit = async (userId, changed, resourceId, ipAddress, userAgent) => {
   await logAuditEvent(
-    'PASSWORD_CHANGE',
+    'USER_DETAILS_EDIT',
     'success',
     {
       userId,
-      resource: "User",
+      resource: "EditDetails",
+      resourceId: resourceId,
       ipAddress,
-      userAgent
+      userAgent,
+      details: {reason: `changed ${changed}`},
     }
   );
 };
@@ -231,7 +233,7 @@ module.exports = {
   logRegistration,
   logAccessDenied,
   logValidationFailure,
-  logPasswordChange,
+  logDetailsEdit,
   getAuditLogs,
 
   getUser,
